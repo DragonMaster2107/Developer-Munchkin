@@ -7,16 +7,19 @@ internal sealed class GameBuilder
 {
     private readonly int _players;
     private readonly ulong _seed;
+    private readonly CardCatalog _catalog;
     private readonly List<Action<Game>> _steps = [];
     private GamePhase _phase = GamePhase.Setup;
 
-    private GameBuilder(int players, ulong seed)
+    private GameBuilder(int players, ulong seed, CardCatalog catalog)
     {
         _players = players;
         _seed = seed;
+        _catalog = catalog;
     }
 
-    public static GameBuilder Create(int players = 3, ulong seed = 42) => new(players, seed);
+    public static GameBuilder Create(int players = 3, ulong seed = 42, CardCatalog? catalog = null) =>
+        new(players, seed, catalog ?? TestData.Catalog);
 
     public GameBuilder Hand(int p, params string[] cardIds) => Add(g => Move(g, cardIds, g.State.Players[p - 1].Hand));
     public GameBuilder Equip(int p, params string[] cardIds) => Add(g => Move(g, cardIds, g.State.Players[p - 1].Equipped));
@@ -53,7 +56,7 @@ internal sealed class GameBuilder
     public Game Build()
     {
         var setups = Enumerable.Range(1, _players).Select(i => new PlayerSetup($"Spieler {i}", $"farbe{i}")).ToList();
-        var game = Game.New(setups, TestData.Catalog, _seed);
+        var game = Game.New(setups, _catalog, _seed);
         foreach (var step in _steps)
         {
             step(game);

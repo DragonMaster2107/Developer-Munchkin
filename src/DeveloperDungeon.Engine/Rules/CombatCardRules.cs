@@ -57,16 +57,7 @@ internal static class CombatCardRules
             return CommandResult.Ok(events);
         }
 
-        if (def.Effects.OfType<Manual>().Any())
-        {
-            source.Remove(card);
-            Decks.Discard(s, c, card);
-            events.Add(new CardPlayedInCombat(player.Id, card.CardId, null));
-            events.Add(new ManualEffectShown(card.CardId));
-            GameLog.Add(s, $"{player.Name} spielt {def.Name} (manuelle Wirkung).");
-            return CommandResult.Ok(events);
-        }
-
+        // Rein manuelle Einmalkarten behandelt CardPlayRules.PlayManual.
         return CommandResult.Rejected("Diese Karte kann man so nicht ausspielen.");
     }
 

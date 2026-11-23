@@ -7,13 +7,18 @@ public sealed class CardCatalog
 {
     private readonly List<CardDefinition> _cards;
     private readonly Dictionary<string, CardDefinition> _byId = new();
+    private readonly int _nullEntries;
 
-    private CardCatalog(List<CardDefinition> cards)
+    private CardCatalog(List<CardDefinition?> cards)
     {
-        _cards = cards;
-        foreach (var card in cards)
+        _cards = cards.OfType<CardDefinition>().ToList();
+        _nullEntries = cards.Count - _cards.Count;
+        foreach (var card in _cards)
         {
-            _byId.TryAdd(card.Id, card);
+            if (card.Id is not null)
+            {
+                _byId.TryAdd(card.Id, card);
+            }
         }
     }
 
@@ -21,7 +26,7 @@ public sealed class CardCatalog
 
     public static CardCatalog FromJson(params string[] jsonArrays)
     {
-        var cards = new List<CardDefinition>();
+        var cards = new List<CardDefinition?>();
         foreach (var json in jsonArrays)
         {
             var parsed = JsonSerializer.Deserialize(json, EngineJsonContext.Default.ListCardDefinition);
@@ -58,14 +63,45 @@ public sealed class CardCatalog
     {
         var errors = new List<string>();
 
-        foreach (var group in _cards.GroupBy(c => c.Id).Where(g => g.Count() > 1))
+        if (_nullEntries > 0)
+        {
+            errors.Add($"Der Katalog enthält {_nullEntries} leere Einträge (null).");
+        }
+
+        foreach (var group in _cards.Where(c => c.Id is not null).GroupBy(c => c.Id).Where(g => g.Count() > 1))
         {
             errors.Add($"Karte '{group.Key}': Id kommt {group.Count()}-mal vor.");
         }
 
+        var departmentKeys = KeysOf(CardKind.Department);
+        var languageKeys = KeysOf(CardKind.Language);
+
         foreach (var card in _cards)
         {
             var id = card.Id;
+
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                errors.Add($"Karte '{card.Name}': Id fehlt.");
+            }
+            if (string.IsNullOrWhiteSpace(card.Name))
+            {
+                errors.Add($"Karte '{id}': Name fehlt.");
+            }
+            if (string.IsNullOrWhiteSpace(card.RulesText))
+            {
+                errors.Add($"Karte '{id}': Regeltext fehlt.");
+            }
+            if (card.Effects is null || card.BadStuff is null || card.Tags is null)
+            {
+                errors.Add($"Karte '{id}': Wirkungen, Schlimme Dinge und Tags dürfen nicht null sein.");
+            }
+            var effects = card.Effects ?? [];
+            var allEffects = effects.Concat(card.BadStuff ?? []).ToList();
+            if (allEffects.Any(e => e is null))
+            {
+                errors.Add($"Karte '{id}': enthält eine leere Wirkung (null).");
+            }
 
             if (card.Count < 1)
             {
@@ -98,6 +134,35 @@ public sealed class CardCatalog
                     break;
             }
 
+            var usable = card.Kind switch
+            {
+                CardKind.Special => effects.Any(e => e is MaxDepartments or MaxLanguages or AddMonsterToCombat or Manual),
+                CardKind.OneShot => effects.Any(e => e is CombatBonus or AutoEscape or Manual),
+                CardKind.MonsterEnhancer => effects.Any(e => e is MonsterModifier or Manual),
+                CardKind.LevelUp => effects.Any(e => e is GainLevels or Manual),
+                _ => true,
+            };
+            if (!usable)
+            {
+                errors.Add($"Karte '{id}': {card.Kind} hat keine Wirkung, mit der man sie benutzen kann.");
+            }
+
+            var conditions = allEffects.OfType<ConditionalCombatBonus>().ToList();
+            foreach (var key in conditions.Select(e => e.PlayerDepartment).Append(card.RequiresDepartment).OfType<string>())
+            {
+                if (!departmentKeys.Contains(key))
+                {
+                    errors.Add($"Karte '{id}': Abteilung '{key}' gibt es im Katalog nicht.");
+                }
+            }
+            foreach (var key in conditions.Select(e => e.PlayerLanguage).Append(card.RequiresLanguage).OfType<string>())
+            {
+                if (!languageKeys.Contains(key))
+                {
+                    errors.Add($"Karte '{id}': Sprache '{key}' gibt es im Katalog nicht.");
+                }
+            }
+
             var deckOk = card.Kind switch
             {
                 CardKind.Monster or CardKind.MonsterEnhancer or CardKind.Curse
@@ -113,4 +178,7 @@ public sealed class CardCatalog
 
         return errors;
     }
+
+    private HashSet<string> KeysOf(CardKind kind) =>
+        _cards.Where(c => c.Kind == kind).Select(c => c.Key).OfType<string>().ToHashSet();
 }

@@ -126,4 +126,86 @@ public class CardCatalogTests
             EngineJsonContext.Default.ListCardDefinition);
         Assert.Equal(json, again);
     }
+
+    private static string Card(string id, string kind, string deck, string effects = "", string extra = "", string name = "n", string rulesText = "x") =>
+        $$"""{ "id": "{{id}}", "name": "{{name}}", "deck": "{{deck}}", "kind": "{{kind}}", "flavor": "x", "rulesText": "{{rulesText}}", "effects": [{{effects}}] {{extra}} }""";
+
+    private const string QaDepartment = """{ "id": "dept-qa", "name": "n", "deck": "ticket", "kind": "department", "flavor": "x", "rulesText": "x", "key": "qa" }""";
+    private const string PythonLanguage = """{ "id": "lang-python", "name": "n", "deck": "ticket", "kind": "language", "flavor": "x", "rulesText": "x", "key": "python" }""";
+
+    [Theory]
+    [InlineData("", "n", "x")]
+    [InlineData("noname", "", "x")]
+    [InlineData("norules", "n", " ")]
+    public void Validate_ReportsEmptyIdNameOrRulesText(string id, string name, string rulesText)
+    {
+        var errors = ValidateJson(Card(id, "oneShot", "loot", """{ "type": "CombatBonus", "amount": 1 }""", name: name, rulesText: rulesText));
+        Assert.NotEmpty(errors);
+    }
+
+    [Theory]
+    [InlineData("special", "ticket")]
+    [InlineData("oneShot", "loot")]
+    [InlineData("monsterEnhancer", "ticket")]
+    [InlineData("levelUp", "loot")]
+    public void Validate_ReportsPlayableKindWithoutUsableEffect(string kind, string deck) =>
+        Assert.Contains(ValidateJson(Card("empty", kind, deck, """{ "type": "NextTurnPenalty", "amount": 1 }""")), e => e.Contains("empty"));
+
+    [Theory]
+    [InlineData("special", "ticket", """{ "type": "MaxDepartments", "max": 2 }""")]
+    [InlineData("special", "ticket", """{ "type": "MaxLanguages", "max": 2 }""")]
+    [InlineData("special", "ticket", """{ "type": "AddMonsterToCombat" }""")]
+    [InlineData("special", "ticket", """{ "type": "Manual" }""")]
+    [InlineData("oneShot", "loot", """{ "type": "CombatBonus", "amount": 1 }""")]
+    [InlineData("oneShot", "loot", """{ "type": "AutoEscape" }""")]
+    [InlineData("oneShot", "loot", """{ "type": "Manual" }""")]
+    [InlineData("monsterEnhancer", "ticket", """{ "type": "MonsterModifier", "levels": 1, "extraLoot": 0 }""")]
+    [InlineData("monsterEnhancer", "ticket", """{ "type": "Manual" }""")]
+    [InlineData("levelUp", "loot", """{ "type": "GainLevels", "amount": 1 }""")]
+    [InlineData("levelUp", "loot", """{ "type": "Manual" }""")]
+    public void Validate_AcceptsPlayableKindWithUsableEffect(string kind, string deck, string effect) =>
+        Assert.Empty(ValidateJson(Card("ok", kind, deck, effect)));
+
+    [Fact]
+    public void Validate_ReportsUnknownRequiredDepartment() =>
+        Assert.Contains(ValidateJson(Equip("e", "head", 0).Replace("\"value\": 100", "\"value\": 100, \"requiresDepartment\": \"qa\"")), e => e.Contains("qa"));
+
+    [Fact]
+    public void Validate_ReportsUnknownRequiredLanguage() =>
+        Assert.Contains(ValidateJson(Equip("e", "head", 0).Replace("\"value\": 100", "\"value\": 100, \"requiresLanguage\": \"python\"")), e => e.Contains("python"));
+
+    [Fact]
+    public void Validate_ReportsUnknownConditionalDepartment() =>
+        Assert.Contains(ValidateJson(Mon("m", """, "effects": [ { "type": "ConditionalCombatBonus", "amount": 2, "playerDepartment": "qa" } ]""")), e => e.Contains("qa"));
+
+    [Fact]
+    public void Validate_ReportsUnknownConditionalLanguage() =>
+        Assert.Contains(ValidateJson(Mon("m", """, "effects": [ { "type": "ConditionalCombatBonus", "amount": 2, "playerLanguage": "python" } ]""")), e => e.Contains("python"));
+
+    [Fact]
+    public void Validate_DepartmentKeyMustNotBeLanguageKey() =>
+        Assert.Contains(ValidateJson(PythonLanguage.Replace("python", "qa") + "," + Equip("e", "head", 0).Replace("\"value\": 100", "\"value\": 100, \"requiresDepartment\": \"qa\"")), e => e.Contains("qa"));
+
+    [Fact]
+    public void Validate_AcceptsKnownKeys()
+    {
+        var equip = Equip("e", "head", 0).Replace("\"value\": 100", "\"value\": 100, \"requiresDepartment\": \"qa\", \"requiresLanguage\": \"python\"");
+        var monster = Mon("m", """, "effects": [ { "type": "ConditionalCombatBonus", "amount": 2, "playerDepartment": "qa" }, { "type": "ConditionalCombatBonus", "amount": 1, "playerLanguage": "python" } ]""");
+        Assert.Empty(ValidateJson(string.Join(",", QaDepartment, PythonLanguage, equip, monster)));
+    }
+
+    [Fact]
+    public void Validate_ReportsNullEntry_WithoutCrashing()
+    {
+        var catalog = CardCatalog.FromJson("[" + Mon("a") + ", null]");
+        Assert.NotEmpty(catalog.Validate());
+        Assert.Equal("a", catalog.Get("a").Id);
+    }
+
+    [Fact]
+    public void Validate_ReportsNullId_WithoutCrashing()
+    {
+        var json = """[{ "id": null, "name": "n", "deck": "ticket", "kind": "monster", "flavor": "x", "rulesText": "x", "level": 1 }]""";
+        Assert.NotEmpty(CardCatalog.FromJson(json).Validate());
+    }
 }
