@@ -6,6 +6,7 @@ namespace DeveloperDungeon.Engine.Serialization;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(List<CardDefinition>))]
+[JsonSerializable(typeof(DeveloperDungeon.Engine.State.GameState))]
 internal partial class EngineJsonContext : JsonSerializerContext
 {
 }

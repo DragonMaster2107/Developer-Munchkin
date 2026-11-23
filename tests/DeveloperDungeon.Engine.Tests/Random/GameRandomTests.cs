@@ -33,6 +33,13 @@ public class GameRandomTests
     }
 
     [Fact]
+    public void KnownSequence_ForSeed42_IsPinned()
+    {
+        var r = new GameRandom(42);
+        Assert.Equal(new[] { 413, 291, 858, 764, 250 }, Enumerable.Range(0, 5).Select(_ => r.Next(1000)).ToArray());
+    }
+
+    [Fact]
     public void Shuffle_IsDeterministicPermutation()
     {
         var l1 = Enumerable.Range(0, 30).ToList();
