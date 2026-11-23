@@ -36,3 +36,9 @@ public sealed record CardDrawn(string PlayerId, Cards.Deck Deck) : GameEvent;
 public sealed record CardsGiven(string FromId, string ToId, int Count) : GameEvent;
 
 public sealed record TurnEnded(string PlayerId, string NextPlayerId) : GameEvent;
+
+public sealed record CombatWon(string PlayerId, int LevelsGained, int LootDrawn) : GameEvent;
+
+public sealed record CombatLost(string PlayerId) : GameEvent;
+
+public sealed record GameWon(string PlayerId) : GameEvent;

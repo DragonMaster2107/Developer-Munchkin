@@ -10,8 +10,23 @@ internal static class PassiveEffects
     {
         var player = s.Players.First(p => p.Id == playerId);
         return player.Equipped.Concat(player.Departments).Concat(player.Languages)
-            .Where(card => card.InstanceId != excludeInstanceId)
+            .Where(card => card.InstanceId != excludeInstanceId && IsActive(c, player, card))
             .SelectMany(card => c.Get(card.CardId).Effects);
+    }
+
+    /// <summary>Beschränkte Ausrüstung, deren Voraussetzung der Träger nicht mehr erfüllt, bleibt getragen, wirkt aber nicht.</summary>
+    public static bool IsActive(CardCatalog c, PlayerState player, CardInstance card)
+    {
+        var def = c.Get(card.CardId);
+        if (def.RequiresDepartment is { } dept && player.Departments.All(x => c.Get(x.CardId).Key != dept))
+        {
+            return false;
+        }
+        if (def.RequiresLanguage is { } lang && player.Languages.All(x => c.Get(x.CardId).Key != lang))
+        {
+            return false;
+        }
+        return true;
     }
 
     public static int MaxDepartments(GameState s, CardCatalog c, string playerId, int? excludeInstanceId = null) =>

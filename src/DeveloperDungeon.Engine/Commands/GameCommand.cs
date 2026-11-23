@@ -29,3 +29,6 @@ public sealed record WorkBacklog(string ActorId) : GameCommand(ActorId);
 
 /// <summary>Beendet den Zug; <c>GiveAway</c> sind die InstanceIds der überzähligen Handkarten.</summary>
 public sealed record EndTurn(string ActorId, IReadOnlyList<int> GiveAway) : GameCommand(ActorId);
+
+/// <summary>Wertet den Kampf aus; nur der aktive Spieler, solange gekämpft wird.</summary>
+public sealed record ResolveCombat(string ActorId) : GameCommand(ActorId);
