@@ -143,4 +143,22 @@ public class ChoiceTests
 
         Assert.False(result.Accepted);
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void QueuedChoice_WithoutRemainingOption_IsDroppedAfterFirstResolve(bool secondIsGive)
+    {
+        var game = Turn().Hand(1, "equip-head").Equip(2, "equip-small").Build();
+        Effect second = secondIsGive ? new GiveEquippedItemToNeighbor(Direction.Left) : new LoseSmallItem();
+        EffectApplier.ApplyToPlayer(game.State, game.Catalog, game.Rng, "p2", [new LoseSmallItem(), second], "x", []);
+        Assert.Equal(2, game.State.PendingChoices.Count);
+
+        var small = IdOf(game.State.Players[1].Equipped, "equip-small");
+        Assert.True(game.Execute(new ResolveChoice("p2", small)).Accepted);
+
+        Assert.Empty(game.State.PendingChoices);
+        var head = IdOf(game.State.Players[0].Hand, "equip-head");
+        Assert.True(game.Execute(new EquipCard("p1", head)).Accepted);
+    }
 }

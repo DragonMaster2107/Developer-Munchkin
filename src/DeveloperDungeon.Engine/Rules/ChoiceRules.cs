@@ -45,6 +45,23 @@ internal static class ChoiceRules
         }
 
         s.PendingChoices.RemoveAt(0);
+        DropUnresolvable(s, c);
         return CommandResult.Ok([new ChoiceResolved(player.Id, card.InstanceId)]);
+    }
+
+    /// <summary>Verwirft führende Auswahlen ohne gültige Option, damit das Spiel nicht festhängt.</summary>
+    private static void DropUnresolvable(GameState s, CardCatalog c)
+    {
+        while (s.PendingChoices.Count > 0)
+        {
+            var next = s.PendingChoices[0];
+            var owner = s.Players.First(p => p.Id == next.PlayerId);
+            if (EffectApplier.HasValidOption(c, owner, next.Kind))
+            {
+                return;
+            }
+            s.PendingChoices.RemoveAt(0);
+            GameLog.Add(s, $"{owner.Name} hat nichts mehr abzugeben.");
+        }
     }
 }

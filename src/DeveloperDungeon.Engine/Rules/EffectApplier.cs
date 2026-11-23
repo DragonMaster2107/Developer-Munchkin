@@ -28,7 +28,7 @@ internal static class EffectApplier
                     DiscardAll(s, c, player, worn, player.Equipped, events);
                     break;
                 case LoseSmallItem:
-                    if (player.Equipped.Any(x => IsSmallItem(c, x)))
+                    if (HasValidOption(c, player, ChoiceKind.DiscardSmallItem))
                     {
                         Request(s, player.Id, ChoiceKind.DiscardSmallItem, null, sourceCardId, events);
                     }
@@ -37,7 +37,7 @@ internal static class EffectApplier
                     DiscardFromHand(s, c, rng, player, e.Count, events);
                     break;
                 case GiveEquippedItemToNeighbor e:
-                    if (player.Equipped.Count > 0)
+                    if (HasValidOption(c, player, ChoiceKind.GiveEquippedItem))
                     {
                         Request(s, player.Id, ChoiceKind.GiveEquippedItem, Neighbor(s, player, e.Direction).Id, sourceCardId, events);
                     }
@@ -67,6 +67,14 @@ internal static class EffectApplier
             }
         }
     }
+
+    /// <summary>Gibt es für die Auswahl noch mindestens eine wählbare Karte? Gemeinsame Prüfung für Anlegen und Verwerfen.</summary>
+    public static bool HasValidOption(CardCatalog c, PlayerState player, ChoiceKind kind) => kind switch
+    {
+        ChoiceKind.DiscardSmallItem => player.Equipped.Any(x => IsSmallItem(c, x)),
+        ChoiceKind.GiveEquippedItem => player.Equipped.Count > 0,
+        _ => false,
+    };
 
     public static bool IsSmallItem(CardCatalog c, CardInstance card) =>
         c.Get(card.CardId) is { Kind: CardKind.Equipment, Slot: Slot.None };
