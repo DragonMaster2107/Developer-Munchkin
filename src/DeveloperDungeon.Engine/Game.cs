@@ -5,6 +5,7 @@ using DeveloperDungeon.Engine.Random;
 using DeveloperDungeon.Engine.Rules;
 using DeveloperDungeon.Engine.Serialization;
 using DeveloperDungeon.Engine.State;
+using DeveloperDungeon.Engine.Views;
 
 namespace DeveloperDungeon.Engine;
 
@@ -110,6 +111,35 @@ public sealed class Game
     }
 
     public string Save() => JsonSerializer.Serialize(State, EngineJsonContext.Default.GameState);
+
+    /// <summary>Spielersicht; die Hand ist nur für <paramref name="viewerId"/> enthalten.</summary>
+    public GameView GetView(string? viewerId)
+    {
+        var s = State;
+        var players = s.Players
+            .Select(p => new PublicPlayerView(
+                p.Id, p.Name, p.Color, p.Level, LevelTitles.For(p.Level), p.Hand.Count,
+                [.. p.Equipped], [.. p.Backpack], [.. p.Departments], [.. p.Languages],
+                StrengthCalculator.BasePower(s, Catalog, p.Id)))
+            .ToList();
+        var myHand = viewerId is null ? null : s.Players.FirstOrDefault(p => p.Id == viewerId)?.Hand;
+        var combat = s.Combat is null ? null : new CombatView(s.Combat, StrengthCalculator.Summarize(s, Catalog));
+
+        return new GameView(
+            s.Phase,
+            s.Players[s.ActivePlayerIndex].Id,
+            s.TurnNumber,
+            players,
+            myHand is null ? null : [.. myHand],
+            combat,
+            s.TicketDeck.Count,
+            s.LootDeck.Count,
+            s.TicketDiscard.LastOrDefault(),
+            s.LootDiscard.LastOrDefault(),
+            s.PendingChoices.FirstOrDefault(),
+            s.WinnerId,
+            [.. s.Log.TakeLast(100)]);
+    }
 
     public CommandResult Execute(GameCommand command)
     {
