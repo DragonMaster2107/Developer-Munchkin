@@ -38,7 +38,7 @@ internal static class EconomyRules
         {
             return CommandResult.Rejected("Verkaufen kannst du nur in deinem Zug außerhalb eines Kampfs.");
         }
-        if (cmd.InstanceIds.Count == 0 || cmd.InstanceIds.Distinct().Count() != cmd.InstanceIds.Count)
+        if (cmd.InstanceIds is null || cmd.InstanceIds.Count == 0 || cmd.InstanceIds.Distinct().Count() != cmd.InstanceIds.Count)
         {
             return CommandResult.Rejected("Wähle mindestens eine Karte, jede nur einmal.");
         }

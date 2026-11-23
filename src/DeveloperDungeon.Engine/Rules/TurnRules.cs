@@ -117,6 +117,11 @@ internal static class TurnRules
             return CommandResult.Rejected("Der Zug kann jetzt noch nicht beendet werden.");
         }
 
+        if (cmd.GiveAway is null)
+        {
+            return CommandResult.Rejected("Gib an, welche Karten du abgibst (eine leere Liste, wenn keine).");
+        }
+
         var player = s.Players[s.ActivePlayerIndex];
         var excess = Math.Max(0, player.Hand.Count - HandLimit);
         var ids = cmd.GiveAway.Distinct().ToList();

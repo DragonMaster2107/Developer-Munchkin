@@ -17,8 +17,9 @@ public sealed class Game
     private const int MaxPlayers = 6;
     private const int StartCardsPerDeck = 4;
 
-    private readonly GameState _state;
-    private readonly GameRandom _rng;
+    // Nicht readonly: nach einer Ausnahme in Execute wird der Zustand aus dem Schnappschuss wiederhergestellt.
+    private GameState _state;
+    private GameRandom _rng;
     private readonly Queue<int> _forcedRolls = new();
 
     private Game(GameState state, CardCatalog catalog, GameRandom rng)
@@ -105,8 +106,7 @@ public sealed class Game
 
     public static Game Load(string json, CardCatalog catalog)
     {
-        var state = JsonSerializer.Deserialize(json, EngineJsonContext.Default.GameState)
-            ?? throw new JsonException("Leerer Spielstand.");
+        var state = Deserialize(json);
         return new Game(state, catalog, new GameRandom(state.RngState));
     }
 
@@ -141,7 +141,27 @@ public sealed class Game
             [.. s.Log.TakeLast(100)]);
     }
 
+    /// <summary>Prüft und wendet einen Befehl an. Wirft nie: eine interne Ausnahme stellt den Zustand vor dem Befehl wieder her und liefert eine Ablehnung.</summary>
     public CommandResult Execute(GameCommand command)
+    {
+        var snapshot = Save();
+        try
+        {
+            return Dispatch(command);
+        }
+        catch (Exception ex)
+        {
+            _state = Deserialize(snapshot);
+            _rng = new GameRandom(_state.RngState);
+            return CommandResult.Rejected($"Interner Fehler: {ex.Message}");
+        }
+    }
+
+    private static GameState Deserialize(string json) =>
+        JsonSerializer.Deserialize(json, EngineJsonContext.Default.GameState)
+            ?? throw new JsonException("Leerer Spielstand.");
+
+    private CommandResult Dispatch(GameCommand command)
     {
         var rejection = CommandGuard.Check(_state, command);
         var result = rejection is not null
