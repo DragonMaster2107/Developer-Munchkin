@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DeveloperDungeon.Engine.Cards;
+using DeveloperDungeon.Engine.Commands;
 using DeveloperDungeon.Engine.Random;
 using DeveloperDungeon.Engine.Rules;
 using DeveloperDungeon.Engine.Serialization;
@@ -97,6 +98,27 @@ public sealed class Game
     }
 
     public string Save() => JsonSerializer.Serialize(State, EngineJsonContext.Default.GameState);
+
+    public CommandResult Execute(GameCommand command)
+    {
+        var rejection = CommandGuard.Check(_state, command);
+        var result = rejection is not null
+            ? CommandResult.Rejected(rejection)
+            : command switch
+            {
+                StartGame cmd => StartRules.Handle(_state, Catalog, _rng, cmd),
+                EquipCard cmd => EquipRules.Handle(_state, Catalog, _rng, cmd),
+                UnequipCard cmd => EquipRules.Handle(_state, Catalog, _rng, cmd),
+                DiscardOwnCard cmd => EquipRules.Handle(_state, Catalog, _rng, cmd),
+                _ => CommandResult.Rejected("Unbekannter Befehl."),
+            };
+
+        if (result.Accepted)
+        {
+            _state.RngState = _rng.State;
+        }
+        return result;
+    }
 
     private static void AddIfNotNull(List<CardInstance> list, CardInstance? card)
     {
