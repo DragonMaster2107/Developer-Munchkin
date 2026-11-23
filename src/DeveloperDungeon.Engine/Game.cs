@@ -104,10 +104,74 @@ public sealed class Game
         return game;
     }
 
+    /// <summary>Lädt einen Spielstand. Ist er beschädigt oder passt er nicht zum Katalog, wird eine <see cref="InvalidDataException"/> geworfen.</summary>
     public static Game Load(string json, CardCatalog catalog)
     {
-        var state = Deserialize(json);
+        GameState state;
+        try
+        {
+            state = Deserialize(json);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException($"Der Spielstand ist beschädigt: {ex.Message}", ex);
+        }
+
+        var problem = FindLoadProblem(state, catalog);
+        if (problem is not null)
+        {
+            throw new InvalidDataException($"Der Spielstand kann nicht geladen werden: {problem}");
+        }
         return new Game(state, catalog, new GameRandom(state.RngState));
+    }
+
+    private static string? FindLoadProblem(GameState s, CardCatalog catalog)
+    {
+        if (s.SchemaVersion != GameState.CurrentSchemaVersion)
+        {
+            return $"unbekannte Version {s.SchemaVersion} (erwartet {GameState.CurrentSchemaVersion}).";
+        }
+        if (s.Players is null || s.Players.Count is < MinPlayers or > MaxPlayers)
+        {
+            return $"Ein Spiel braucht {MinPlayers} bis {MaxPlayers} Spieler.";
+        }
+        if (s.ActivePlayerIndex < 0 || s.ActivePlayerIndex >= s.Players.Count)
+        {
+            return "Der aktive Spieler existiert nicht.";
+        }
+
+        var known = catalog.All.Select(d => d.Id).ToHashSet();
+        var seen = new HashSet<int>();
+        foreach (var card in AllCards(s))
+        {
+            if (card is null || !known.Contains(card.CardId))
+            {
+                return $"Unbekannte Karte '{card?.CardId}'.";
+            }
+            if (!seen.Add(card.InstanceId))
+            {
+                return $"Die Karten-Instanz {card.InstanceId} liegt mehrfach im Spiel.";
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Alle Karteninstanzen in Stapeln, Ablagen, Spielerzonen und im Kampf.</summary>
+    private static IEnumerable<CardInstance?> AllCards(GameState s)
+    {
+        var zones = new List<List<CardInstance>?> { s.TicketDeck, s.TicketDiscard, s.LootDeck, s.LootDiscard };
+        foreach (var p in s.Players)
+        {
+            zones.AddRange([p.Hand, p.Equipped, p.Backpack, p.Departments, p.Languages]);
+        }
+        if (s.Combat is { } combat)
+        {
+            zones.Add(combat.Monsters);
+            zones.Add(combat.OtherPlayed);
+            zones.AddRange(combat.Enhancers?.Values ?? Enumerable.Empty<List<CardInstance>>());
+            zones.Add(combat.OneShots?.Select(o => o.Card).ToList());
+        }
+        return zones.SelectMany(z => z ?? []);
     }
 
     public string Save() => JsonSerializer.Serialize(State, EngineJsonContext.Default.GameState);

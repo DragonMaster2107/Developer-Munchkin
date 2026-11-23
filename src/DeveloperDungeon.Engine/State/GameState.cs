@@ -2,6 +2,10 @@ namespace DeveloperDungeon.Engine.State;
 
 public sealed class GameState
 {
+    /// <summary>Aktuelles Format des Spielstands; <c>Game.Load</c> lehnt andere Versionen ab.</summary>
+    public const int CurrentSchemaVersion = 1;
+
+    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public GamePhase Phase { get; set; }
     public List<PlayerState> Players { get; set; } = [];
     public int ActivePlayerIndex { get; set; }
