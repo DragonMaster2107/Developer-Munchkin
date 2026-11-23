@@ -4,4 +4,8 @@
     <InternalsVisibleTo Include="DeveloperDungeon.Engine.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Cards\Data\*.json" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,507 @@
+[
+ {
+  "id": "monster-l1",
+  "name": "monster-l1",
+  "deck": "ticket",
+  "kind": "monster",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 10,
+  "level": 1,
+  "rewardLevels": 1,
+  "rewardLoot": 1,
+  "badStuff": [
+   {
+    "type": "LoseLevels",
+    "amount": 1
+   }
+  ]
+ },
+ {
+  "id": "monster-l3-legacy",
+  "name": "monster-l3-legacy",
+  "deck": "ticket",
+  "kind": "monster",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 6,
+  "level": 3,
+  "rewardLevels": 1,
+  "rewardLoot": 1,
+  "badStuff": [
+   {
+    "type": "LoseSlot",
+    "slot": "head"
+   }
+  ],
+  "tags": [
+   "Legacy"
+  ]
+ },
+ {
+  "id": "monster-l8-hates-qa",
+  "name": "monster-l8-hates-qa",
+  "deck": "ticket",
+  "kind": "monster",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 4,
+  "level": 8,
+  "rewardLevels": 1,
+  "rewardLoot": 2,
+  "badStuff": [
+   {
+    "type": "LoseSmallItem"
+   }
+  ],
+  "effects": [
+   {
+    "type": "ConditionalCombatBonus",
+    "amount": 2,
+    "playerDepartment": "qa"
+   }
+  ]
+ },
+ {
+  "id": "monster-boss-l12",
+  "name": "monster-boss-l12",
+  "deck": "ticket",
+  "kind": "monster",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "level": 12,
+  "rewardLevels": 2,
+  "rewardLoot": 3,
+  "badStuff": [
+   {
+    "type": "LoseLevels",
+    "amount": 2
+   }
+  ],
+  "tags": [
+   "Meeting"
+  ],
+  "noPursuitBelowLevel": 3
+ },
+ {
+  "id": "enhancer-plus5",
+  "name": "enhancer-plus5",
+  "deck": "ticket",
+  "kind": "monsterEnhancer",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "effects": [
+   {
+    "type": "MonsterModifier",
+    "levels": 5,
+    "extraLoot": 1
+   }
+  ]
+ },
+ {
+  "id": "curse-lose-level",
+  "name": "curse-lose-level",
+  "deck": "ticket",
+  "kind": "curse",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "effects": [
+   {
+    "type": "LoseLevels",
+    "amount": 1
+   }
+  ]
+ },
+ {
+  "id": "curse-give-item",
+  "name": "curse-give-item",
+  "deck": "ticket",
+  "kind": "curse",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "tags": [
+   "Security"
+  ],
+  "effects": [
+   {
+    "type": "GiveEquippedItemToNeighbor",
+    "direction": "left"
+   }
+  ]
+ },
+ {
+  "id": "curse-lose-head",
+  "name": "curse-lose-head",
+  "deck": "ticket",
+  "kind": "curse",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "effects": [
+   {
+    "type": "LoseSlot",
+    "slot": "head"
+   }
+  ]
+ },
+ {
+  "id": "curse-discard-two",
+  "name": "curse-discard-two",
+  "deck": "ticket",
+  "kind": "curse",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "effects": [
+   {
+    "type": "DiscardHand",
+    "count": 2
+   }
+  ]
+ },
+ {
+  "id": "curse-penalty",
+  "name": "curse-penalty",
+  "deck": "ticket",
+  "kind": "curse",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "effects": [
+   {
+    "type": "NextTurnPenalty",
+    "amount": 2
+   }
+  ]
+ },
+ {
+  "id": "curse-manual",
+  "name": "curse-manual",
+  "deck": "ticket",
+  "kind": "curse",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "effects": [
+   {
+    "type": "Manual"
+   }
+  ]
+ },
+ {
+  "id": "dept-qa",
+  "name": "dept-qa",
+  "deck": "ticket",
+  "kind": "department",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "key": "qa",
+  "effects": [
+   {
+    "type": "TiesWin"
+   }
+  ]
+ },
+ {
+  "id": "dept-team-assistant",
+  "name": "dept-team-assistant",
+  "deck": "ticket",
+  "kind": "department",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "key": "team-assistant",
+  "effects": [
+   {
+    "type": "CurseImmunity",
+    "curseTag": "Security"
+   },
+   {
+    "type": "HelpingGrantsLevel"
+   }
+  ]
+ },
+ {
+  "id": "dept-cloud",
+  "name": "dept-cloud",
+  "deck": "ticket",
+  "kind": "department",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "key": "cloud-platform",
+  "effects": [
+   {
+    "type": "EscapeBonus",
+    "amount": 1
+   }
+  ]
+ },
+ {
+  "id": "lang-csharp",
+  "name": "lang-csharp",
+  "deck": "ticket",
+  "kind": "language",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "key": "csharp",
+  "effects": [
+   {
+    "type": "ConditionalCombatBonus",
+    "amount": 1,
+    "monsterTag": "Legacy"
+   }
+  ]
+ },
+ {
+  "id": "lang-python",
+  "name": "lang-python",
+  "deck": "ticket",
+  "kind": "language",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "key": "python",
+  "effects": [
+   {
+    "type": "CombatBonus",
+    "amount": 1
+   }
+  ]
+ },
+ {
+  "id": "special-full-stack",
+  "name": "special-full-stack",
+  "deck": "ticket",
+  "kind": "special",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "effects": [
+   {
+    "type": "MaxDepartments",
+    "max": 2
+   }
+  ]
+ },
+ {
+  "id": "special-polyglot",
+  "name": "special-polyglot",
+  "deck": "ticket",
+  "kind": "special",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "effects": [
+   {
+    "type": "MaxLanguages",
+    "max": 2
+   }
+  ]
+ },
+ {
+  "id": "special-wandering-bug",
+  "name": "special-wandering-bug",
+  "deck": "ticket",
+  "kind": "special",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "effects": [
+   {
+    "type": "AddMonsterToCombat"
+   }
+  ]
+ },
+ {
+  "id": "equip-head",
+  "name": "equip-head",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "slot": "head",
+  "hands": 0,
+  "bonus": 1,
+  "value": 200
+ },
+ {
+  "id": "equip-feet",
+  "name": "equip-feet",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "slot": "feet",
+  "hands": 0,
+  "bonus": 1,
+  "value": 400
+ },
+ {
+  "id": "equip-body",
+  "name": "equip-body",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "slot": "body",
+  "hands": 0,
+  "bonus": 2,
+  "value": 300
+ },
+ {
+  "id": "equip-ide-1h",
+  "name": "equip-ide-1h",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 4,
+  "slot": "hands",
+  "hands": 1,
+  "bonus": 2,
+  "value": 300
+ },
+ {
+  "id": "equip-ide-2h",
+  "name": "equip-ide-2h",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "slot": "hands",
+  "hands": 2,
+  "bonus": 3,
+  "value": 600
+ },
+ {
+  "id": "equip-big",
+  "name": "equip-big",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "slot": "big",
+  "hands": 0,
+  "bonus": 3,
+  "value": 500
+ },
+ {
+  "id": "equip-qa-only",
+  "name": "equip-qa-only",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 2,
+  "slot": "hands",
+  "hands": 1,
+  "bonus": 4,
+  "value": 500,
+  "requiresDepartment": "qa"
+ },
+ {
+  "id": "equip-small",
+  "name": "equip-small",
+  "deck": "loot",
+  "kind": "equipment",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 4,
+  "slot": "none",
+  "hands": 0,
+  "bonus": 1,
+  "value": 100
+ },
+ {
+  "id": "oneshot-plus2",
+  "name": "oneshot-plus2",
+  "deck": "loot",
+  "kind": "oneShot",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 6,
+  "value": 100,
+  "effects": [
+   {
+    "type": "CombatBonus",
+    "amount": 2
+   },
+   {
+    "type": "NextTurnPenalty",
+    "amount": 1
+   }
+  ]
+ },
+ {
+  "id": "oneshot-plus5",
+  "name": "oneshot-plus5",
+  "deck": "loot",
+  "kind": "oneShot",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "value": 300,
+  "effects": [
+   {
+    "type": "CombatBonus",
+    "amount": 5
+   }
+  ]
+ },
+ {
+  "id": "oneshot-remote",
+  "name": "oneshot-remote",
+  "deck": "loot",
+  "kind": "oneShot",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 3,
+  "value": 200,
+  "effects": [
+   {
+    "type": "AutoEscape"
+   }
+  ]
+ },
+ {
+  "id": "levelup-raise",
+  "name": "levelup-raise",
+  "deck": "loot",
+  "kind": "levelUp",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 4,
+  "effects": [
+   {
+    "type": "GainLevels",
+    "amount": 1
+   }
+  ]
+ },
+ {
+  "id": "loot-manual",
+  "name": "loot-manual",
+  "deck": "loot",
+  "kind": "oneShot",
+  "flavor": "Test",
+  "rulesText": "Test",
+  "count": 1,
+  "effects": [
+   {
+    "type": "Manual"
+   }
+  ]
+ }
+]
