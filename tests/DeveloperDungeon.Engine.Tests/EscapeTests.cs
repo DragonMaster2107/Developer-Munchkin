@@ -196,4 +196,49 @@ public class EscapeTests
         Assert.Equal(a.Events, b.Events);
         Assert.Equal(game.Save(), loaded.Save());
     }
+
+    [Fact]
+    public void AttemptEscape_SkipsMonsterIdsNoLongerInCombat()
+    {
+        var game = Fleeing("monster-l1", 3);
+        game.State.Combat!.Fleeing[0].UnresolvedMonsterIds.Add(99999);
+        game.ForceNextRolls(6);
+
+        var result = game.Execute(new AttemptEscape("p1"));
+
+        Assert.True(result.Accepted);
+        Assert.Single(result.Events.OfType<EscapeRolled>());
+        Assert.Null(game.State.Combat);
+    }
+
+    [Fact]
+    public void RemoteDay_WithNothingLeftToEscape_IsRejectedAndKeepsCard()
+    {
+        var game = Fleeing("monster-l1", 3, b => b.Hand(1, "oneshot-remote"));
+        game.State.Combat!.Fleeing[0].UnresolvedMonsterIds.Clear();
+        var card = game.State.Players[0].Hand.Single();
+
+        var result = game.Execute(new PlayCard("p1", card.InstanceId));
+
+        Assert.False(result.Accepted);
+        Assert.Equal("Du musst gerade nicht fliehen.", result.Rejection);
+        Assert.Contains(game.State.Players[0].Hand, x => x.InstanceId == card.InstanceId);
+    }
+
+    [Fact]
+    public void ResolveCombat_LostWithoutMonsters_CreatesNoFleeingEntries()
+    {
+        var game = GameBuilder.Create().ClearHands().Active(1).Phase(GamePhase.OpenTicket).TicketTop("monster-l1").Build();
+        Assert.True(game.Execute(new OpenTicket("p1")).Accepted);
+        var monster = game.State.Combat!.Monsters[0];
+        game.State.Combat.Monsters.Clear();
+        game.State.TicketDiscard.Add(monster);
+        game.State.Combat.ManualMonsterAdjust = 10;
+
+        var result = game.Execute(new ResolveCombat("p1"));
+
+        Assert.True(result.Accepted);
+        Assert.Null(game.State.Combat);
+        Assert.Equal(GamePhase.EndTurn, game.State.Phase);
+    }
 }

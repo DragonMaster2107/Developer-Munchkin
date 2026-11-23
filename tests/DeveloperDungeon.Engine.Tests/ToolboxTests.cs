@@ -89,7 +89,7 @@ public class ToolboxTests
         var monsterId = game.State.Combat!.Monsters[0].InstanceId;
 
         Assert.True(game.Execute(new ManualMoveCard("p1", monsterId, "p2", Zone.Backpack)).Accepted);
-        Assert.Empty(game.State.Combat!.Monsters);
+        Assert.Null(game.State.Combat);
         Assert.Contains(game.State.Players[1].Backpack, c => c.InstanceId == monsterId);
 
         var card = game.State.LootDeck[0];
@@ -120,7 +120,7 @@ public class ToolboxTests
         var result = game.Execute(new ManualDiscard("p2", monster.InstanceId));
 
         Assert.True(result.Accepted);
-        Assert.Empty(game.State.Combat!.Monsters);
+        Assert.Null(game.State.Combat);
         Assert.Contains(game.State.TicketDiscard, c => c.InstanceId == monster.InstanceId);
     }
 
@@ -257,5 +257,104 @@ public class ToolboxTests
 
         Assert.True(game.State.Log.Count > logCount);
         Assert.StartsWith("[Werkzeugkasten]", game.State.Log[logCount].Text);
+    }
+
+    private static Game FleeingFrom(params string[] monsterIds)
+    {
+        var game = Turn().TicketTop(monsterIds[0]).Build();
+        Assert.True(game.Execute(new OpenTicket("p1")).Accepted);
+        foreach (var id in monsterIds.Skip(1))
+        {
+            var extra = game.State.TicketDeck.First(x => x.CardId == id);
+            game.State.TicketDeck.Remove(extra);
+            game.State.Combat!.Monsters.Add(extra);
+        }
+        Assert.True(game.Execute(new ResolveCombat("p1")).Accepted);
+        Assert.Equal(CombatStage.Fleeing, game.State.Combat!.Stage);
+        return game;
+    }
+
+    [Fact]
+    public void Discard_OnlyMonsterWhileFleeing_CleansUpCombat()
+    {
+        var game = FleeingFrom("monster-l1");
+        var monsterId = game.State.Combat!.Monsters[0].InstanceId;
+
+        Assert.True(game.Execute(new ManualDiscard("p1", monsterId)).Accepted);
+
+        Assert.Null(game.State.Combat);
+        Assert.Equal(GamePhase.EndTurn, game.State.Phase);
+        Assert.Contains(game.State.TicketDiscard, c => c.InstanceId == monsterId);
+        Assert.True(game.Execute(new EndTurn("p1", [])).Accepted);
+    }
+
+    [Fact]
+    public void MoveCard_OneOfTwoMonstersWhileFleeing_EscapeStillWorks()
+    {
+        var game = FleeingFrom("monster-l1", "monster-l3-legacy");
+        var legacy = game.State.Combat!.Monsters.First(m => m.CardId == "monster-l3-legacy").InstanceId;
+
+        Assert.True(game.Execute(new ManualMoveCard("p1", legacy, "p2", Zone.Hand)).Accepted);
+        Assert.Equal([game.State.Combat!.Monsters[0].InstanceId], game.State.Combat.Fleeing[0].UnresolvedMonsterIds);
+
+        game.ForceNextRolls(6);
+        var result = game.Execute(new AttemptEscape("p1"));
+
+        Assert.True(result.Accepted);
+        Assert.Single(result.Events.OfType<EscapeRolled>());
+        Assert.Null(game.State.Combat);
+        Assert.Equal(GamePhase.EndTurn, game.State.Phase);
+    }
+
+    [Fact]
+    public void MoveCard_OnlyMonsterWhileFleeingWithHelper_FinishesAllEntries()
+    {
+        var game = Turn().TicketTop("monster-l1").Build();
+        Assert.True(game.Execute(new OpenTicket("p1")).Accepted);
+        Assert.True(game.Execute(new OfferHelp("p2", 0)).Accepted);
+        Assert.True(game.Execute(new AcceptHelp("p1", "p2")).Accepted);
+        Assert.True(game.Execute(new ManualCombatAdjust("p1", Side.Monster, 10)).Accepted);
+        Assert.True(game.Execute(new ResolveCombat("p1")).Accepted);
+        Assert.Equal(2, game.State.Combat!.Fleeing.Count);
+        var monsterId = game.State.Combat.Monsters[0].InstanceId;
+
+        Assert.True(game.Execute(new ManualMoveCard("p3", monsterId, "p3", Zone.Hand)).Accepted);
+
+        Assert.Null(game.State.Combat);
+        Assert.Equal(GamePhase.EndTurn, game.State.Phase);
+        Assert.Contains(game.State.Players[2].Hand, c => c.InstanceId == monsterId);
+    }
+
+    [Fact]
+    public void Discard_OnlyMonsterWhileFighting_EndsCombatWithoutReward()
+    {
+        var game = InCombat();
+        var monsterId = game.State.Combat!.Monsters[0].InstanceId;
+        var logCount = game.State.Log.Count;
+
+        var result = game.Execute(new ManualDiscard("p2", monsterId));
+
+        Assert.True(result.Accepted);
+        Assert.Null(game.State.Combat);
+        Assert.Equal(GamePhase.EndTurn, game.State.Phase);
+        Assert.Equal(1, game.State.Players[0].Level);
+        Assert.Empty(game.State.Players[0].Hand);
+        Assert.Contains(game.State.Log.Skip(logCount), l => l.Text.Contains("Kampf endet"));
+        Assert.True(game.Execute(new EndTurn("p1", [])).Accepted);
+    }
+
+    [Fact]
+    public void Discard_OneOfTwoMonstersWhileFighting_CombatContinues()
+    {
+        var game = InCombat();
+        var extra = game.State.TicketDeck.First(x => x.CardId == "monster-l1");
+        game.State.TicketDeck.Remove(extra);
+        game.State.Combat!.Monsters.Add(extra);
+
+        Assert.True(game.Execute(new ManualDiscard("p2", extra.InstanceId)).Accepted);
+
+        Assert.NotNull(game.State.Combat);
+        Assert.Single(game.State.Combat!.Monsters);
+        Assert.Equal(GamePhase.Combat, game.State.Phase);
     }
 }

@@ -24,10 +24,30 @@ internal static class ToolboxRules
         };
         if (result.Accepted)
         {
+            EndCombatIfResolved(s, c);
             // Der Eingriff kann einem Auswählenden die Optionen genommen haben.
             ChoiceRules.DropUnresolvable(s, c);
         }
         return result;
+    }
+
+    /// <summary>Beendet den Kampf, wenn nach dem Eingriff kein Monster mehr kämpft oder niemand mehr fliehen muss.</summary>
+    private static void EndCombatIfResolved(GameState s, CardCatalog c)
+    {
+        if (s.Phase != GamePhase.Combat || s.Combat is not { } combat)
+        {
+            return;
+        }
+        if (combat.Stage == CombatStage.Fighting && combat.Monsters.Count == 0)
+        {
+            CombatCleanup.DiscardAll(s, c);
+            GameLog.Add(s, "Kein Monster mehr im Kampf – der Kampf endet ohne Belohnung.");
+        }
+        else if (combat.Stage == CombatStage.Fleeing && combat.Fleeing.Count == 0)
+        {
+            CombatCleanup.DiscardAll(s, c);
+            GameLog.Add(s, "Niemand muss mehr fliehen – der Kampf ist vorbei.");
+        }
     }
 
     private static CommandResult AdjustLevel(GameState s, ManualAdjustLevel cmd)
@@ -179,10 +199,16 @@ internal static class ToolboxRules
         return null;
     }
 
-    /// <summary>Entfernt ein Monster aus dem Kampf; seine Verstärker bleiben nicht als Waisen zurück, sondern kommen auf die Ablage.</summary>
+    /// <summary>Entfernt ein Monster aus dem Kampf; seine Verstärker bleiben nicht als Waisen zurück, sondern kommen auf die Ablage.
+    /// Fliehende müssen vor ihm nicht mehr fliehen; wer danach vor niemandem mehr flieht, ist fertig.</summary>
     private static void RemoveMonster(GameState s, CardCatalog c, CombatState combat, CardInstance monster)
     {
         combat.Monsters.Remove(monster);
+        foreach (var entry in combat.Fleeing)
+        {
+            entry.UnresolvedMonsterIds.Remove(monster.InstanceId);
+        }
+        combat.Fleeing.RemoveAll(f => f.UnresolvedMonsterIds.Count == 0);
         if (combat.Enhancers.Remove(monster.InstanceId, out var enhancers))
         {
             foreach (var enhancer in enhancers)

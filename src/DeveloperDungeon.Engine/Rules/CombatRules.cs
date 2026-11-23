@@ -27,8 +27,17 @@ internal static class CombatRules
 
         if (!summary.PlayerWouldWin)
         {
-            combat.Stage = CombatStage.Fleeing;
             var monsterIds = combat.Monsters.Select(m => m.InstanceId).ToList();
+            if (monsterIds.Count == 0)
+            {
+                // Ohne Monster gibt es nichts, wovor man fliehen müsste.
+                events.Add(new CombatLost(active.Id));
+                GameLog.Add(s, $"{active.Name} verliert den Kampf, aber es ist kein Monster da, vor dem man fliehen müsste.");
+                CombatCleanup.DiscardAll(s, c);
+                return CommandResult.Ok(events);
+            }
+
+            combat.Stage = CombatStage.Fleeing;
             var fleeing = new List<string> { active.Id };
             if (combat.HelperId is not null)
             {

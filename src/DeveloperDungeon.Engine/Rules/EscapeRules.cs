@@ -24,9 +24,8 @@ internal static class EscapeRules
         var events = new List<GameEvent>();
         var bonus = PassiveEffects.Of(s, c, player.Id).OfType<EscapeBonus>().Sum(e => e.Amount);
 
-        foreach (var monsterInstanceId in entry.UnresolvedMonsterIds.ToList())
+        foreach (var monster in UnresolvedMonsters(combat, entry))
         {
-            var monster = combat.Monsters.First(m => m.InstanceId == monsterInstanceId);
             var def = c.Get(monster.CardId);
 
             if (def.NoPursuitBelowLevel is { } limit && player.Level < limit)
@@ -57,16 +56,16 @@ internal static class EscapeRules
     /// <summary>Flucht-Einmalkarte: alle Monster des Spielers gelten als entkommen. Der Aufrufer hat bereits geprüft, dass die Karte AutoEscape hat.</summary>
     public static CommandResult PlayAutoEscape(GameState s, CardCatalog c, CombatState combat, PlayerState player, CardInstance card, List<CardInstance> source)
     {
-        if (FleeingEntry(s, player.Id) is not { } entry)
+        var monsters = FleeingEntry(s, player.Id) is { } entry ? UnresolvedMonsters(combat, entry) : [];
+        if (monsters.Count == 0)
         {
             return CommandResult.Rejected("Du musst gerade nicht fliehen.");
         }
 
         var def = c.Get(card.CardId);
         var events = new List<GameEvent>();
-        foreach (var monsterInstanceId in entry.UnresolvedMonsterIds)
+        foreach (var monster in monsters)
         {
-            var monster = combat.Monsters.First(m => m.InstanceId == monsterInstanceId);
             events.Add(new EscapeRolled(player.Id, monster.CardId, 0, 0, true));
         }
 
@@ -82,6 +81,13 @@ internal static class EscapeRules
         s.Phase == GamePhase.Combat && s.Combat is { Stage: CombatStage.Fleeing } combat
             ? combat.Fleeing.FirstOrDefault(f => f.PlayerId == playerId)
             : null;
+
+    /// <summary>Die offenen Monster des Fliehenden; Ids, die nicht mehr im Kampf liegen (z. B. per Werkzeugkasten entfernt), werden übersprungen.</summary>
+    private static List<CardInstance> UnresolvedMonsters(CombatState combat, FleeingPlayer entry) =>
+        entry.UnresolvedMonsterIds
+            .Select(id => combat.Monsters.FirstOrDefault(m => m.InstanceId == id))
+            .OfType<CardInstance>()
+            .ToList();
 
     private static void Finish(GameState s, CardCatalog c, CombatState combat, string playerId)
     {
