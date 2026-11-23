@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DeveloperDungeon.Engine.Cards;
+using DeveloperDungeon.Engine.Serialization;
 using DeveloperDungeon.Engine.Tests.Support;
 
 namespace DeveloperDungeon.Engine.Tests.Cards;
@@ -96,5 +97,24 @@ public class CardCatalogTests
         Assert.NotNull(card.Effects);
         Assert.NotNull(card.BadStuff);
         Assert.NotNull(card.Tags);
+    }
+
+    [Fact]
+    public void Serialize_WritesEnumsAsCamelCase_AndRoundTrips()
+    {
+        var cards = TestData.Catalog.All.ToList();
+        var json = JsonSerializer.Serialize(cards, EngineJsonContext.Default.ListCardDefinition);
+
+        Assert.Contains("\"deck\":\"ticket\"", json);
+        Assert.Contains("\"kind\":\"monsterEnhancer\"", json);
+        Assert.Contains("\"slot\":\"head\"", json);
+        Assert.Contains("\"direction\":\"left\"", json);
+        Assert.DoesNotContain("\"Head\"", json);
+        Assert.DoesNotContain("\"Ticket\"", json);
+
+        var again = JsonSerializer.Serialize(
+            JsonSerializer.Deserialize(json, EngineJsonContext.Default.ListCardDefinition)!,
+            EngineJsonContext.Default.ListCardDefinition);
+        Assert.Equal(json, again);
     }
 }
