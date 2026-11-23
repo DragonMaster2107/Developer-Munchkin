@@ -231,6 +231,14 @@ public sealed class Game
         }
     }
 
+    /// <summary>Liefert das Ergebnis, das <see cref="Execute"/> jetzt hätte, ohne dieses Spiel zu verändern (läuft auf einer Kopie).</summary>
+    public CommandResult Preview(GameCommand command)
+    {
+        var state = Deserialize(Save());
+        var clone = new Game(state, Catalog, new GameRandom(state.RngState));
+        return clone.Execute(command);
+    }
+
     private static GameState Deserialize(string json) =>
         JsonSerializer.Deserialize(json, EngineJsonContext.Default.GameState)
             ?? throw new JsonException("Leerer Spielstand.");
