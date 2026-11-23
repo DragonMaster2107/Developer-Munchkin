@@ -7,6 +7,10 @@ public sealed record CombatSummary(int PlayerStrength, int MonsterStrength, bool
 
 public static class StrengthCalculator
 {
+    /// <summary>Wie <see cref="Summarize"/>, liefert aber null, wenn kein Kampf läuft.</summary>
+    public static CombatSummary? TrySummarize(GameState s, CardCatalog c) =>
+        s.Combat is null ? null : Summarize(s, c);
+
     /// <summary>Stärken und Belohnungen des laufenden Kampfes; setzt einen Kampf voraus.</summary>
     public static CombatSummary Summarize(GameState s, CardCatalog c)
     {

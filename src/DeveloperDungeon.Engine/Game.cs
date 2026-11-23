@@ -31,8 +31,8 @@ public sealed class Game
 
     public CardCatalog Catalog { get; }
 
-    /// <summary>Der Zustand; <c>RngState</c> ist dabei stets aktuell.</summary>
-    public GameState State
+    /// <summary>Der lebende Zustand (nur engine-intern und für Tests); <c>RngState</c> ist dabei stets aktuell. Öffentlich: <see cref="GetView"/> und <see cref="Save"/>.</summary>
+    internal GameState State
     {
         get
         {
@@ -176,34 +176,44 @@ public sealed class Game
 
     public string Save() => JsonSerializer.Serialize(State, EngineJsonContext.Default.GameState);
 
-    /// <summary>Spielersicht; die Hand ist nur für <paramref name="viewerId"/> enthalten.</summary>
+    /// <summary>Spielersicht als Schnappschuss (teilt keine veränderlichen Objekte mit dem Zustand); die Hand ist nur für <paramref name="viewerId"/> enthalten.</summary>
     public GameView GetView(string? viewerId)
     {
         var s = State;
         var players = s.Players
             .Select(p => new PublicPlayerView(
                 p.Id, p.Name, p.Color, p.Level, LevelTitles.For(p.Level), p.Hand.Count,
-                [.. p.Equipped], [.. p.Backpack], [.. p.Departments], [.. p.Languages],
+                Copy(p.Equipped), Copy(p.Backpack), Copy(p.Departments), Copy(p.Languages),
                 StrengthCalculator.BasePower(s, Catalog, p.Id)))
             .ToList();
         var myHand = viewerId is null ? null : s.Players.FirstOrDefault(p => p.Id == viewerId)?.Hand;
-        var combat = s.Combat is null ? null : new CombatView(s.Combat, StrengthCalculator.Summarize(s, Catalog));
+        var summary = StrengthCalculator.TrySummarize(s, Catalog);
+        var combat = s.Combat is null || summary is null ? null : new CombatView(CopyCombat(s.Combat), summary);
+        var choice = s.PendingChoices.FirstOrDefault();
 
         return new GameView(
             s.Phase,
             s.Players[s.ActivePlayerIndex].Id,
             s.TurnNumber,
             players,
-            myHand is null ? null : [.. myHand],
+            myHand is null ? null : Copy(myHand),
             combat,
             s.TicketDeck.Count,
             s.LootDeck.Count,
-            s.TicketDiscard.LastOrDefault(),
-            s.LootDiscard.LastOrDefault(),
-            s.PendingChoices.FirstOrDefault(),
+            Copy(s.TicketDiscard.LastOrDefault()),
+            Copy(s.LootDiscard.LastOrDefault()),
+            choice is null ? null : new PendingChoice { PlayerId = choice.PlayerId, Kind = choice.Kind, RecipientPlayerId = choice.RecipientPlayerId, SourceCardId = choice.SourceCardId },
             s.WinnerId,
-            [.. s.Log.TakeLast(100)]);
+            [.. s.Log.TakeLast(100).Select(l => new LogEntry { Seq = l.Seq, Text = l.Text })]);
     }
+
+    private static List<CardInstance> Copy(List<CardInstance> cards) => [.. cards.Select(c => Copy(c)!)];
+
+    private static CardInstance? Copy(CardInstance? card) =>
+        card is null ? null : new CardInstance { InstanceId = card.InstanceId, CardId = card.CardId };
+
+    private static CombatState CopyCombat(CombatState combat) =>
+        JsonSerializer.Deserialize(JsonSerializer.Serialize(combat, EngineJsonContext.Default.CombatState), EngineJsonContext.Default.CombatState)!;
 
     /// <summary>Prüft und wendet einen Befehl an. Wirft nie: eine interne Ausnahme stellt den Zustand vor dem Befehl wieder her und liefert eine Ablehnung.</summary>
     public CommandResult Execute(GameCommand command)

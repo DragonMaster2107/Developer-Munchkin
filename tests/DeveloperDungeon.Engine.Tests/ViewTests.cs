@@ -57,10 +57,46 @@ public class ViewTests
         Assert.Equal(GamePhase.Combat, view.Phase);
         Assert.Equal("p1", view.ActivePlayerId);
         Assert.NotNull(view.Combat);
-        Assert.Same(game.State.Combat, view.Combat!.State);
+        Assert.NotSame(game.State.Combat, view.Combat!.State);
+        Assert.Equal(game.State.Combat!.Monsters.Select(m => m.InstanceId), view.Combat.State.Monsters.Select(m => m.InstanceId));
         Assert.Equal(StrengthCalculator.Summarize(game.State, game.Catalog), view.Combat.Summary);
         Assert.Equal(1, view.Players[0].Level);
         Assert.Equal("Unbezahlter Praktikant", view.Players[0].Title);
+    }
+
+    [Fact]
+    public void CombatView_TakenBeforeResolve_DoesNotChangeAfterwards()
+    {
+        var game = GameBuilder.Create().ClearHands().Active(1).Phase(GamePhase.OpenTicket).TicketTop("monster-l1").Build();
+        game.Execute(new OpenTicket("p1"));
+        var view = game.GetView("p1");
+
+        Assert.True(game.Execute(new ResolveCombat("p1")).Accepted);
+        Assert.Equal(CombatStage.Fleeing, game.State.Combat!.Stage);
+
+        Assert.Equal(CombatStage.Fighting, view.Combat!.State.Stage);
+        Assert.Empty(view.Combat.State.Fleeing);
+        Assert.Single(view.Combat.State.Monsters);
+    }
+
+    [Fact]
+    public void ViewCards_AreCopies_NotLiveState()
+    {
+        var game = GameBuilder.Create().Equip(1, "equip-body").Build();
+        var view = game.GetView("p1");
+
+        view.Players[0].Equipped[0].CardId = "changed";
+        view.MyHand![0].CardId = "changed";
+
+        Assert.Equal("equip-body", game.State.Players[0].Equipped[0].CardId);
+        Assert.NotEqual("changed", game.State.Players[0].Hand[0].CardId);
+    }
+
+    [Fact]
+    public void GameState_IsNotPublic()
+    {
+        var property = typeof(Game).GetProperty("State", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        Assert.Null(property);
     }
 
     [Fact]
