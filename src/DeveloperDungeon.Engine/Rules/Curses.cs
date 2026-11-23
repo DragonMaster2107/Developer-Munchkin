@@ -13,6 +13,10 @@ internal static class Curses
         var def = c.Get(curse.CardId);
         var target = s.Players.First(p => p.Id == targetId);
         events.Add(new CursePlayed(byId, targetId, def.Id));
+        // Ein aus dem Ticket gezogener Fluch trifft den Ziehenden selbst; dann gibt es keinen Verfluchenden zu nennen.
+        GameLog.Add(s, byId == targetId
+            ? $"{def.Name} trifft {target.Name}."
+            : $"{s.Players.First(p => p.Id == byId).Name} verflucht {target.Name} mit {def.Name}.");
 
         var immune = PassiveEffects.Of(s, c, targetId).OfType<CurseImmunity>().Any(e => def.Tags.Contains(e.CurseTag));
         if (immune)
@@ -22,7 +26,6 @@ internal static class Curses
         }
         else
         {
-            GameLog.Add(s, $"{def.Name} trifft {target.Name}.");
             EffectApplier.ApplyToPlayer(s, c, rng, targetId, def.Effects, def.Id, events);
         }
         Decks.Discard(s, c, curse);

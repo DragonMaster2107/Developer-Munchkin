@@ -18,10 +18,10 @@ internal static class EffectApplier
             switch (effect)
             {
                 case LoseLevels e:
-                    SetLevel(s, player, Math.Max(1, player.Level - e.Amount), events);
+                    LevelRules.Set(s, player, Math.Max(1, player.Level - e.Amount), events);
                     break;
                 case GainLevels e:
-                    SetLevel(s, player, Math.Max(player.Level, Math.Min(MaxLevelByEffect, player.Level + e.Amount)), events);
+                    LevelRules.Set(s, player, Math.Max(player.Level, Math.Min(MaxLevelByEffect, player.Level + e.Amount)), events);
                     break;
                 case LoseSlot e:
                     var worn = player.Equipped.Where(x => c.Get(x.CardId) is { Kind: CardKind.Equipment } d && d.Slot == e.Slot).ToList();
@@ -43,13 +43,20 @@ internal static class EffectApplier
                     }
                     break;
                 case DrawCards e:
+                    var drawn = 0;
                     for (var i = 0; i < e.Count; i++)
                     {
                         var card = Decks.Draw(s, rng, e.Deck);
                         if (card is not null)
                         {
                             player.Hand.Add(card);
+                            events.Add(new CardDrawn(player.Id, e.Deck));
+                            drawn++;
                         }
+                    }
+                    if (drawn > 0)
+                    {
+                        GameLog.Add(s, $"{player.Name} zieht {drawn} {(drawn == 1 ? "Karte" : "Karten")}.");
                     }
                     break;
                 case NextTurnPenalty e:
@@ -85,17 +92,6 @@ internal static class EffectApplier
         var index = s.Players.IndexOf(player);
         var step = direction == Direction.Left ? 1 : -1;
         return s.Players[(index + step + s.Players.Count) % s.Players.Count];
-    }
-
-    private static void SetLevel(GameState s, PlayerState player, int to, List<GameEvent> events)
-    {
-        if (to == player.Level)
-        {
-            return;
-        }
-        events.Add(new LevelChanged(player.Id, player.Level, to));
-        GameLog.Add(s, $"{player.Name}: Stufe {player.Level} → {to}.");
-        player.Level = to;
     }
 
     private static void DiscardFromHand(GameState s, CardCatalog c, GameRandom rng, PlayerState player, int? count, List<GameEvent> events)

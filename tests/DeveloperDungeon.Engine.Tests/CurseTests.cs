@@ -189,4 +189,46 @@ public class CurseTests
 
         Assert.False(result.Accepted);
     }
+
+    private static GameBuilder ExtendedTurn() =>
+        GameBuilder.Create(catalog: TestData.ExtendedCatalog).ClearHands().Active(1).Phase(GamePhase.OpenTicket);
+
+    [Fact]
+    public void GiveThenLoseHands_OnlyHandItem_LeavesNoUnresolvableChoice()
+    {
+        var game = ExtendedTurn().Hand(1, "curse-give-then-lose-hands").Equip(2, "equip-ide-1h").Build();
+        var id = IdOf(game.State.Players[0].Hand, "curse-give-then-lose-hands");
+
+        var result = game.Execute(new PlayCard("p1", id, TargetPlayerId: "p2"));
+
+        Assert.True(result.Accepted);
+        Assert.Empty(game.State.Players[1].Equipped);
+        Assert.Empty(game.State.PendingChoices);
+        Assert.True(game.Execute(new OpenTicket("p1")).Accepted);
+    }
+
+    [Fact]
+    public void CurseLog_NamesCaster()
+    {
+        var game = Turn().Hand(1, "curse-lose-level").Level(2, 3).Build();
+        var id = IdOf(game.State.Players[0].Hand, "curse-lose-level");
+
+        game.Execute(new PlayCard("p1", id, TargetPlayerId: "p2"));
+
+        Assert.Contains(game.State.Log, l => l.Text == "Spieler 1 verflucht Spieler 2 mit curse-lose-level.");
+    }
+
+    [Fact]
+    public void DrawCardsEffect_EmitsCardDrawnAndLogs()
+    {
+        var game = ExtendedTurn().Hand(1, "curse-draw-two").Build();
+        var id = IdOf(game.State.Players[0].Hand, "curse-draw-two");
+
+        var result = game.Execute(new PlayCard("p1", id, TargetPlayerId: "p2"));
+
+        Assert.True(result.Accepted);
+        Assert.Equal(2, game.State.Players[1].Hand.Count);
+        Assert.Equal(2, result.Events.OfType<CardDrawn>().Count(e => e is { PlayerId: "p2", Deck: Deck.Loot }));
+        Assert.Contains(game.State.Log, l => l.Text == "Spieler 2 zieht 2 Karten.");
+    }
 }

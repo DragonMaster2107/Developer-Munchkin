@@ -25,8 +25,6 @@ internal static class ToolboxRules
         if (result.Accepted)
         {
             EndCombatIfResolved(s, c);
-            // Der Eingriff kann einem Auswählenden die Optionen genommen haben.
-            ChoiceRules.DropUnresolvable(s, c);
         }
         return result;
     }
@@ -79,7 +77,7 @@ internal static class ToolboxRules
         found.Remove();
         ZoneList(target, cmd.ToZone).Add(found.Card);
         var events = new List<GameEvent>();
-        Done(s, cmd.ActorId, $"{c.Get(found.Card.CardId).Name} wandert zu {target.Name} ({cmd.ToZone}).", events);
+        Done(s, cmd.ActorId, $"{c.Get(found.Card.CardId).Name} wandert zu {target.Name} ({ZoneName(cmd.ToZone)}).", events);
         return CommandResult.Ok(events);
     }
 
@@ -159,6 +157,15 @@ internal static class ToolboxRules
         Zone.Backpack => p.Backpack,
         Zone.Department => p.Departments,
         _ => p.Languages,
+    };
+
+    private static string ZoneName(Zone zone) => zone switch
+    {
+        Zone.Hand => "Hand",
+        Zone.Equipped => "Ausrüstung",
+        Zone.Backpack => "Rucksack",
+        Zone.Department => "Abteilung",
+        _ => "Sprache",
     };
 
     private sealed record Found(CardInstance Card, Action Remove);

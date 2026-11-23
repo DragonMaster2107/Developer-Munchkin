@@ -8,7 +8,7 @@ namespace DeveloperDungeon.Engine.Tests;
 public class ManualCardTests
 {
     private static GameBuilder Turn(GamePhase phase = GamePhase.AfterTicket) =>
-        GameBuilder.Create(catalog: TestData.CatalogWithManualCards).ClearHands().Active(1).Phase(phase);
+        GameBuilder.Create(catalog: TestData.ExtendedCatalog).ClearHands().Active(1).Phase(phase);
 
     private static int IdOf(Game game, int player, string cardId) =>
         game.State.Players[player - 1].Hand.First(c => c.CardId == cardId).InstanceId;
@@ -30,7 +30,7 @@ public class ManualCardTests
 
     [Fact]
     public void ManualCardsCatalog_IsValid() =>
-        Assert.Empty(TestData.CatalogWithManualCards.Validate());
+        Assert.Empty(TestData.ExtendedCatalog.Validate());
 
     [Fact]
     public void ManualSpecial_OnOwnTurnOutsideCombat_IsDiscardedAndShown()

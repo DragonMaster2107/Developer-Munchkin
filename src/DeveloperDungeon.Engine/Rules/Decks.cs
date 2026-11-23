@@ -29,6 +29,7 @@ internal static class Decks
         return card;
     }
 
+    /// <summary>Legt die Karte auf die passende Ablage. Die oberste Karte einer Ablage ist ihr letztes Element.</summary>
     public static void Discard(GameState s, CardCatalog c, CardInstance card)
     {
         var target = c.Get(card.CardId).Deck == Deck.Ticket ? s.TicketDiscard : s.LootDiscard;

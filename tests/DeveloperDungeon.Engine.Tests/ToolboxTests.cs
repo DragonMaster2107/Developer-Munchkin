@@ -100,6 +100,22 @@ public class ToolboxTests
         Assert.DoesNotContain(game.State.LootDiscard, c => c.InstanceId == card.InstanceId);
     }
 
+    [Theory]
+    [InlineData(Zone.Hand, "Hand")]
+    [InlineData(Zone.Equipped, "Ausrüstung")]
+    [InlineData(Zone.Backpack, "Rucksack")]
+    [InlineData(Zone.Department, "Abteilung")]
+    [InlineData(Zone.Language, "Sprache")]
+    public void MoveCard_LogsGermanZoneName(Zone zone, string german)
+    {
+        var game = Turn().Equip(2, "equip-body").Build();
+        var id = IdOf(game.State.Players[1].Equipped, "equip-body");
+
+        Assert.True(game.Execute(new ManualMoveCard("p1", id, "p3", zone)).Accepted);
+
+        Assert.EndsWith($"equip-body wandert zu Spieler 3 ({german}).", game.State.Log[^1].Text);
+    }
+
     [Fact]
     public void MoveCard_UnknownCardOrPlayer_IsRejected()
     {

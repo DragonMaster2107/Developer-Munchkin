@@ -269,6 +269,8 @@ public sealed class Game
 
         if (result.Accepted)
         {
+            // Jeder angenommene Befehl kann einem Auswählenden die Optionen genommen haben.
+            ChoiceRules.DropUnresolvable(_state, Catalog);
             _state.RngState = _rng.State;
         }
         return result;

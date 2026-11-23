@@ -18,6 +18,16 @@ public class StrengthTests
     private static CombatSummary Summary(Game game) => StrengthCalculator.Summarize(game.State, game.Catalog);
 
     [Fact]
+    public void TrySummarize_IsNullWithoutCombat_AndMatchesSummarizeInCombat()
+    {
+        var idle = GameBuilder.Create().Build();
+        Assert.Null(StrengthCalculator.TrySummarize(idle.State, idle.Catalog));
+
+        var game = Fight("monster-l1");
+        Assert.Equal(Summary(game), StrengthCalculator.TrySummarize(game.State, game.Catalog));
+    }
+
+    [Fact]
     public void PlayerStrength_IsLevelPlusEquippedBonuses()
     {
         var game = Fight("monster-l1", b => b.Level(1, 2).Equip(1, "equip-head", "equip-ide-1h").Backpack(1, "equip-big"));

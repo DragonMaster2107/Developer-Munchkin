@@ -45,11 +45,10 @@ internal static class ChoiceRules
         }
 
         s.PendingChoices.RemoveAt(0);
-        DropUnresolvable(s, c);
         return CommandResult.Ok([new ChoiceResolved(player.Id, card.InstanceId)]);
     }
 
-    /// <summary>Verwirft führende Auswahlen ohne gültige Option, damit das Spiel nicht festhängt.</summary>
+    /// <summary>Verwirft führende Auswahlen ohne gültige Option, damit das Spiel nicht festhängt. <c>Game.Execute</c> ruft das nach jedem angenommenen Befehl auf.</summary>
     internal static void DropUnresolvable(GameState s, CardCatalog c)
     {
         while (s.PendingChoices.Count > 0)
