@@ -2,7 +2,7 @@
   {
     "id": "monster-works-on-my-machine", "name": "Der ‚Geht bei mir lokal‘-Entwickler", "deck": "ticket", "kind": "monster", "count": 3,
     "flavor": "Ticket geschlossen als ‚Cannot reproduce‘.",
-    "rulesText": "Stufe 3. +2 gegen QA. Schlimme Dinge: Verliere deine Kopfbedeckung.",
+    "rulesText": "Stufe 3. +2 gegen QA. Schlimme Dinge: Verliere alle Kopf-Ausrüstung.",
     "level": 3, "rewardLevels": 1, "rewardLoot": 1, "tags": ["Mensch"],
     "effects": [ { "type": "ConditionalCombatBonus", "amount": 2, "playerDepartment": "qa" } ],
     "badStuff": [ { "type": "LoseSlot", "slot": "head" } ]
@@ -17,7 +17,7 @@
   {
     "id": "monster-legacy-2012", "name": "Der veraltete Legacy-Code von 2012", "deck": "ticket", "kind": "monster", "count": 3,
     "flavor": "Kommentar im Code: ‚Bitte nicht anfassen. Ich weiß auch nicht warum.‘",
-    "rulesText": "Stufe 8. Schlimme Dinge: Verliere eine deiner Hände (Hand-Ausrüstung).",
+    "rulesText": "Stufe 8. Schlimme Dinge: Verliere alle Hand-Ausrüstung.",
     "level": 8, "rewardLevels": 1, "rewardLoot": 2, "tags": ["Legacy"],
     "badStuff": [ { "type": "LoseSlot", "slot": "hands" } ]
   },
@@ -31,7 +31,7 @@
   {
     "id": "curse-unlocked-pc", "name": "Du hast vergessen, deinen Rechner zu sperren …", "deck": "ticket", "kind": "curse", "count": 2,
     "flavor": "Die Kollegen haben dir ein neues Hintergrundbild verpasst. Und ein Teil deines Setups gleich mit.",
-    "rulesText": "Gib einen angelegten Gegenstand an den linken Nachbarn. Schutz: Security-Fluch.",
+    "rulesText": "Gib einen angelegten Gegenstand deiner Wahl an den linken Nachbarn (Security-Fluch).",
     "tags": ["Security"],
     "effects": [ { "type": "GiveEquippedItemToNeighbor", "direction": "left" } ]
   },
