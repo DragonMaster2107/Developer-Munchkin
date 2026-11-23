@@ -42,3 +42,9 @@ public sealed record CombatWon(string PlayerId, int LevelsGained, int LootDrawn)
 public sealed record CombatLost(string PlayerId) : GameEvent;
 
 public sealed record GameWon(string PlayerId) : GameEvent;
+
+public sealed record CardPlayedInCombat(string PlayerId, string CardId, Cards.Side? Side) : GameEvent;
+
+public sealed record HelpOffered(string PlayerId, int LootShare) : GameEvent;
+
+public sealed record HelpAccepted(string HelperId) : GameEvent;

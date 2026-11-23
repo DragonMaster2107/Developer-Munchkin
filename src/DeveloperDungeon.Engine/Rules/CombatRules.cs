@@ -75,6 +75,65 @@ internal static class CombatRules
         return CommandResult.Ok(events);
     }
 
+    public static CommandResult Handle(GameState s, OfferHelp cmd)
+    {
+        if (Fighting(s) is not { } combat)
+        {
+            return CommandResult.Rejected("Es läuft gerade kein Kampf.");
+        }
+        if (IsActive(s, cmd.ActorId))
+        {
+            return CommandResult.Rejected("Du kämpfst selbst und kannst dir nicht selbst helfen.");
+        }
+        if (combat.HelperId is not null)
+        {
+            return CommandResult.Rejected("Es gibt bereits einen Helfer.");
+        }
+        if (cmd.LootShare < 0)
+        {
+            return CommandResult.Rejected("Der Loot-Anteil darf nicht negativ sein.");
+        }
+
+        combat.Offers.RemoveAll(o => o.PlayerId == cmd.ActorId);
+        combat.Offers.Add(new HelpOffer { PlayerId = cmd.ActorId, LootShare = cmd.LootShare });
+        GameLog.Add(s, $"{NameOf(s, cmd.ActorId)} bietet Hilfe an (Loot-Anteil: {cmd.LootShare}).");
+        return CommandResult.Ok([new HelpOffered(cmd.ActorId, cmd.LootShare)]);
+    }
+
+    public static CommandResult Handle(GameState s, AcceptHelp cmd)
+    {
+        if (Fighting(s) is not { } combat)
+        {
+            return CommandResult.Rejected("Es läuft gerade kein Kampf.");
+        }
+        if (!IsActive(s, cmd.ActorId))
+        {
+            return CommandResult.Rejected("Nur der aktive Spieler kann Hilfe annehmen.");
+        }
+        if (combat.HelperId is not null)
+        {
+            return CommandResult.Rejected("Es gibt bereits einen Helfer.");
+        }
+        var offer = combat.Offers.FirstOrDefault(o => o.PlayerId == cmd.HelperId);
+        if (offer is null)
+        {
+            return CommandResult.Rejected("Dieser Spieler hat keine Hilfe angeboten.");
+        }
+
+        combat.HelperId = offer.PlayerId;
+        combat.HelperLootShare = offer.LootShare;
+        combat.Offers.Clear();
+        GameLog.Add(s, $"{NameOf(s, offer.PlayerId)} hilft im Kampf (Loot-Anteil: {offer.LootShare}).");
+        return CommandResult.Ok([new HelpAccepted(offer.PlayerId)]);
+    }
+
+    private static CombatState? Fighting(GameState s) =>
+        s.Phase == GamePhase.Combat && s.Combat is { Stage: CombatStage.Fighting } combat ? combat : null;
+
+    private static bool IsActive(GameState s, string playerId) => s.Players[s.ActivePlayerIndex].Id == playerId;
+
+    private static string NameOf(GameState s, string playerId) => s.Players.First(p => p.Id == playerId).Name;
+
     private static List<CardInstance> DrawLoot(GameState s, GameRandom rng, int count)
     {
         var drawn = new List<CardInstance>();

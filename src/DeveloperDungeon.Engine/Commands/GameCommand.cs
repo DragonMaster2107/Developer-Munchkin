@@ -32,3 +32,9 @@ public sealed record EndTurn(string ActorId, IReadOnlyList<int> GiveAway) : Game
 
 /// <summary>Wertet den Kampf aus; nur der aktive Spieler, solange gekämpft wird.</summary>
 public sealed record ResolveCombat(string ActorId) : GameCommand(ActorId);
+
+/// <summary>Bietet dem aktiven Spieler Hilfe im Kampf an; <c>LootShare</c> = geforderte Loot-Karten.</summary>
+public sealed record OfferHelp(string ActorId, int LootShare) : GameCommand(ActorId);
+
+/// <summary>Der aktive Spieler nimmt das Hilfsangebot von <c>HelperId</c> an.</summary>
+public sealed record AcceptHelp(string ActorId, string HelperId) : GameCommand(ActorId);

@@ -13,14 +13,24 @@ internal static class CardPlayRules
     {
         var player = s.Players.First(p => p.Id == cmd.ActorId);
         var card = player.Hand.FirstOrDefault(x => x.InstanceId == cmd.InstanceId);
-        if (card is null)
+        var inBackpack = card is null && s.Phase == GamePhase.Combat
+            ? player.Backpack.FirstOrDefault(x => x.InstanceId == cmd.InstanceId)
+            : null;
+        if (card is null && inBackpack is null)
         {
             return CommandResult.Rejected("Diese Karte hast du nicht auf der Hand.");
         }
 
-        return c.Get(card.CardId).Kind switch
+        if (inBackpack is not null)
+        {
+            return CombatCardRules.Handle(s, c, rng, player, inBackpack, player.Backpack, cmd);
+        }
+
+        return c.Get(card!.CardId).Kind switch
         {
             CardKind.Curse => PlayCurse(s, c, rng, player, card, cmd),
+            CardKind.OneShot or CardKind.MonsterEnhancer or CardKind.Special or CardKind.LevelUp or CardKind.Equipment
+                => CombatCardRules.Handle(s, c, rng, player, card, player.Hand, cmd),
             _ => CommandResult.Rejected("Diese Karte kann man so nicht ausspielen."),
         };
     }
