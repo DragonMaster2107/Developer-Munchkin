@@ -11,6 +11,12 @@ internal static class CombatCardRules
 {
     public static CommandResult Handle(GameState s, CardCatalog c, GameRandom rng, PlayerState player, CardInstance card, List<CardInstance> source, PlayCard cmd)
     {
+        if (s.Phase == GamePhase.Combat && s.Combat is { Stage: CombatStage.Fleeing } fleeing
+            && c.Get(card.CardId) is { Kind: CardKind.OneShot } escapeDef && escapeDef.Effects.OfType<AutoEscape>().Any())
+        {
+            return EscapeRules.PlayAutoEscape(s, c, fleeing, player, card, source);
+        }
+
         if (s.Phase != GamePhase.Combat || s.Combat is not { Stage: CombatStage.Fighting } combat)
         {
             return CommandResult.Rejected("Diese Karte kann man nur im laufenden Kampf ausspielen.");

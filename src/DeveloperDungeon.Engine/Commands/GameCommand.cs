@@ -38,3 +38,6 @@ public sealed record OfferHelp(string ActorId, int LootShare) : GameCommand(Acto
 
 /// <summary>Der aktive Spieler nimmt das Hilfsangebot von <c>HelperId</c> an.</summary>
 public sealed record AcceptHelp(string ActorId, string HelperId) : GameCommand(ActorId);
+
+/// <summary>Ein fliehender Spieler würfelt für alle seine offenen Monster.</summary>
+public sealed record AttemptEscape(string ActorId) : GameCommand(ActorId);

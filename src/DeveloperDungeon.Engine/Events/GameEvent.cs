@@ -48,3 +48,8 @@ public sealed record CardPlayedInCombat(string PlayerId, string CardId, Cards.Si
 public sealed record HelpOffered(string PlayerId, int LootShare) : GameEvent;
 
 public sealed record HelpAccepted(string HelperId) : GameEvent;
+
+/// <summary><c>Roll</c> ist 0, wenn ohne Wurf entkommen wurde.</summary>
+public sealed record EscapeRolled(string PlayerId, string MonsterCardId, int Roll, int Bonus, bool Escaped) : GameEvent;
+
+public sealed record BadStuffApplied(string PlayerId, string MonsterCardId) : GameEvent;

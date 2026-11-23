@@ -18,6 +18,7 @@ public sealed class Game
 
     private readonly GameState _state;
     private readonly GameRandom _rng;
+    private readonly Queue<int> _forcedRolls = new();
 
     private Game(GameState state, CardCatalog catalog, GameRandom rng)
     {
@@ -39,6 +40,17 @@ public sealed class Game
     }
 
     internal GameRandom Rng => _rng;
+
+    /// <summary>Nur für Tests: W6-Ergebnisse, die vor dem Zufallsgenerator verbraucht werden; nicht Teil des Spielstands.</summary>
+    internal void ForceNextRolls(params int[] rolls)
+    {
+        foreach (var roll in rolls)
+        {
+            _forcedRolls.Enqueue(roll);
+        }
+    }
+
+    private int RollD6() => _forcedRolls.Count > 0 ? _forcedRolls.Dequeue() : _rng.RollD6();
 
     public static Game New(IReadOnlyList<PlayerSetup> players, CardCatalog catalog, ulong seed)
     {
@@ -114,6 +126,7 @@ public sealed class Game
                 ResolveCombat cmd => CombatRules.Handle(_state, Catalog, _rng, cmd),
                 OfferHelp cmd => CombatRules.Handle(_state, cmd),
                 AcceptHelp cmd => CombatRules.Handle(_state, cmd),
+                AttemptEscape cmd => EscapeRules.Handle(_state, Catalog, _rng, RollD6, cmd),
                 ResolveChoice cmd => ChoiceRules.Handle(_state, Catalog, cmd),
                 OpenTicket or LookForTrouble or WorkBacklog or EndTurn => TurnRules.Handle(_state, Catalog, _rng, command),
                 _ => CommandResult.Rejected("Unbekannter Befehl."),
