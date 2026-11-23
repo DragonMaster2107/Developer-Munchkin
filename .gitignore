@@ -433,3 +433,6 @@ FodyWeavers.xsd
 
 # Local project context for Claude (not for the repo)
 CLAUDE.md
+
+# Superpowers SDD scratch
+.superpowers/
