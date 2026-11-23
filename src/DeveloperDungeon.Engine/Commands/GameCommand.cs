@@ -20,3 +20,12 @@ public sealed record PlayCard(
     int? SecondaryInstanceId = null) : GameCommand(ActorId);
 
 public sealed record ResolveChoice(string ActorId, int InstanceId) : GameCommand(ActorId);
+
+public sealed record OpenTicket(string ActorId) : GameCommand(ActorId);
+
+public sealed record LookForTrouble(string ActorId, int MonsterInstanceId) : GameCommand(ActorId);
+
+public sealed record WorkBacklog(string ActorId) : GameCommand(ActorId);
+
+/// <summary>Beendet den Zug; <c>GiveAway</c> sind die InstanceIds der überzähligen Handkarten.</summary>
+public sealed record EndTurn(string ActorId, IReadOnlyList<int> GiveAway) : GameCommand(ActorId);

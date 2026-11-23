@@ -112,6 +112,7 @@ public sealed class Game
                 DiscardOwnCard cmd => EquipRules.Handle(_state, Catalog, _rng, cmd),
                 PlayCard cmd => CardPlayRules.Handle(_state, Catalog, _rng, cmd),
                 ResolveChoice cmd => ChoiceRules.Handle(_state, Catalog, cmd),
+                OpenTicket or LookForTrouble or WorkBacklog or EndTurn => TurnRules.Handle(_state, Catalog, _rng, command),
                 _ => CommandResult.Rejected("Unbekannter Befehl."),
             };
 

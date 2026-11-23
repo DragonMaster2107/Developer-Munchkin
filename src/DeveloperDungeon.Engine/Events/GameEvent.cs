@@ -25,3 +25,14 @@ public sealed record ChoiceRequested(string PlayerId, ChoiceKind Kind) : GameEve
 public sealed record ChoiceResolved(string PlayerId, int InstanceId) : GameEvent;
 
 public sealed record ManualEffectShown(string CardId) : GameEvent;
+
+public sealed record TicketOpened(string PlayerId, string CardId) : GameEvent;
+
+public sealed record CombatStarted(string PlayerId, string MonsterCardId) : GameEvent;
+
+/// <summary>Karte verdeckt gezogen; die Karte selbst wird nicht verraten.</summary>
+public sealed record CardDrawn(string PlayerId, Cards.Deck Deck) : GameEvent;
+
+public sealed record CardsGiven(string FromId, string ToId, int Count) : GameEvent;
+
+public sealed record TurnEnded(string PlayerId, string NextPlayerId) : GameEvent;
