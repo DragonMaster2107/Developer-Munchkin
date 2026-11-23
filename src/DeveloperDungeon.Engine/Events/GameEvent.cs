@@ -53,3 +53,9 @@ public sealed record HelpAccepted(string HelperId) : GameEvent;
 public sealed record EscapeRolled(string PlayerId, string MonsterCardId, int Roll, int Bonus, bool Escaped) : GameEvent;
 
 public sealed record BadStuffApplied(string PlayerId, string MonsterCardId) : GameEvent;
+
+public sealed record ItemsSold(string PlayerId, int Credits, int LevelsGained) : GameEvent;
+
+public sealed record ToolboxUsed(string ActorId, string Description) : GameEvent;
+
+public sealed record DieRolled(string PlayerId, int Roll) : GameEvent;

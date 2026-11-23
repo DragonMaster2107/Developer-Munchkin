@@ -29,6 +29,7 @@ internal static class CardPlayRules
         return c.Get(card!.CardId).Kind switch
         {
             CardKind.Curse => PlayCurse(s, c, rng, player, card, cmd),
+            CardKind.LevelUp when s.Phase != GamePhase.Combat => EconomyRules.PlayLevelUp(s, c, player, card),
             CardKind.OneShot or CardKind.MonsterEnhancer or CardKind.Special or CardKind.LevelUp or CardKind.Equipment
                 => CombatCardRules.Handle(s, c, rng, player, card, player.Hand, cmd),
             _ => CommandResult.Rejected("Diese Karte kann man so nicht ausspielen."),

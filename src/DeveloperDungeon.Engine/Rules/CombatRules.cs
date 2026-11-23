@@ -8,7 +8,6 @@ namespace DeveloperDungeon.Engine.Rules;
 
 internal static class CombatRules
 {
-    private const int WinLevel = 10;
     private const int MaxHelperLevel = 9;
 
     public static CommandResult Handle(GameState s, CardCatalog c, GameRandom rng, ResolveCombat cmd)
@@ -43,12 +42,12 @@ internal static class CombatRules
 
         var helper = combat.HelperId is null ? null : s.Players.First(p => p.Id == combat.HelperId);
         var from = active.Level;
-        SetLevel(s, active, Math.Min(WinLevel, active.Level + summary.TotalRewardLevels), events);
+        LevelRules.Set(s, active, Math.Min(LevelRules.WinLevel, active.Level + summary.TotalRewardLevels), events);
         var gained = active.Level - from;
 
         if (helper is not null && helper.Level < MaxHelperLevel && PassiveEffects.Of(s, c, helper.Id).Any(e => e is HelpingGrantsLevel))
         {
-            SetLevel(s, helper, helper.Level + 1, events);
+            LevelRules.Set(s, helper, helper.Level + 1, events);
         }
 
         var drawn = DrawLoot(s, rng, summary.TotalRewardLoot);
@@ -62,12 +61,8 @@ internal static class CombatRules
         events.Add(new CombatWon(active.Id, gained, drawn.Count));
         GameLog.Add(s, $"{active.Name} gewinnt den Kampf ({summary.PlayerStrength} gegen {summary.MonsterStrength}): +{gained} Stufen, {drawn.Count} Loot-Karten.");
 
-        if (active.Level >= WinLevel)
+        if (LevelRules.TryWin(s, active, events))
         {
-            s.WinnerId = active.Id;
-            s.Phase = GamePhase.GameOver;
-            events.Add(new GameWon(active.Id));
-            GameLog.Add(s, $"{active.Name} erreicht Stufe {WinLevel} und gewinnt das Spiel.");
             return CommandResult.Ok(events);
         }
 
@@ -145,16 +140,5 @@ internal static class CombatRules
             }
         }
         return drawn;
-    }
-
-    private static void SetLevel(GameState s, PlayerState player, int to, List<GameEvent> events)
-    {
-        if (to == player.Level)
-        {
-            return;
-        }
-        events.Add(new LevelChanged(player.Id, player.Level, to));
-        GameLog.Add(s, $"{player.Name}: Stufe {player.Level} → {to}.");
-        player.Level = to;
     }
 }

@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using DeveloperDungeon.Engine.Serialization;
+
 namespace DeveloperDungeon.Engine.Commands;
 
 public abstract record GameCommand(string ActorId);
@@ -41,3 +44,27 @@ public sealed record AcceptHelp(string ActorId, string HelperId) : GameCommand(A
 
 /// <summary>Ein fliehender Spieler würfelt für alle seine offenen Monster.</summary>
 public sealed record AttemptEscape(string ActorId) : GameCommand(ActorId);
+
+/// <summary>Verkauft Karten aus Hand, Angelegtem und Rucksack; je volle 1000 Wert gibt es eine Stufe.</summary>
+public sealed record SellItems(string ActorId, IReadOnlyList<int> InstanceIds) : GameCommand(ActorId);
+
+[JsonConverter(typeof(CamelCaseEnumConverter<Zone>))]
+public enum Zone { Hand, Equipped, Backpack, Department, Language }
+
+/// <summary>Werkzeugkasten: Stufe eines Spielers ändern (ohne Regelprüfung, 1 bis 10).</summary>
+public sealed record ManualAdjustLevel(string ActorId, string TargetPlayerId, int Delta) : GameCommand(ActorId);
+
+/// <summary>Werkzeugkasten: Karte aus Spielerzone, Kampf oder Ablage in eine Zone eines Spielers legen.</summary>
+public sealed record ManualMoveCard(string ActorId, int InstanceId, string ToPlayerId, Zone ToZone) : GameCommand(ActorId);
+
+/// <summary>Werkzeugkasten: Karte aus Spielerzone oder Kampf auf die Ablage legen.</summary>
+public sealed record ManualDiscard(string ActorId, int InstanceId) : GameCommand(ActorId);
+
+/// <summary>Werkzeugkasten: Karte aus einer Ablage auf die Hand eines Spielers nehmen.</summary>
+public sealed record ManualTakeFromDiscard(string ActorId, int InstanceId, string ToPlayerId) : GameCommand(ActorId);
+
+/// <summary>Werkzeugkasten: Kampfstärke einer Seite anpassen; nur im Kampf.</summary>
+public sealed record ManualCombatAdjust(string ActorId, Cards.Side Side, int Delta) : GameCommand(ActorId);
+
+/// <summary>Werkzeugkasten: W6 werfen.</summary>
+public sealed record RollDie(string ActorId) : GameCommand(ActorId);

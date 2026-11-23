@@ -128,6 +128,9 @@ public sealed class Game
                 AcceptHelp cmd => CombatRules.Handle(_state, cmd),
                 AttemptEscape cmd => EscapeRules.Handle(_state, Catalog, _rng, RollD6, cmd),
                 ResolveChoice cmd => ChoiceRules.Handle(_state, Catalog, cmd),
+                SellItems cmd => EconomyRules.Sell(_state, Catalog, cmd),
+                ManualAdjustLevel or ManualMoveCard or ManualDiscard or ManualTakeFromDiscard or ManualCombatAdjust or RollDie
+                    => ToolboxRules.Handle(_state, Catalog, RollD6, command),
                 OpenTicket or LookForTrouble or WorkBacklog or EndTurn => TurnRules.Handle(_state, Catalog, _rng, command),
                 _ => CommandResult.Rejected("Unbekannter Befehl."),
             };

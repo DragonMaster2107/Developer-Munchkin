@@ -50,7 +50,7 @@ internal static class ChoiceRules
     }
 
     /// <summary>Verwirft führende Auswahlen ohne gültige Option, damit das Spiel nicht festhängt.</summary>
-    private static void DropUnresolvable(GameState s, CardCatalog c)
+    internal static void DropUnresolvable(GameState s, CardCatalog c)
     {
         while (s.PendingChoices.Count > 0)
         {
