@@ -1,0 +1,182 @@
+[
+  {
+    "id": "monster-works-on-my-machine", "name": "Der ‚Geht bei mir lokal‘-Entwickler", "deck": "ticket", "kind": "monster", "count": 3,
+    "flavor": "Ticket geschlossen als ‚Cannot reproduce‘.",
+    "rulesText": "Stufe 3. +2 gegen QA. Schlimme Dinge: Verliere deine Kopfbedeckung.",
+    "level": 3, "rewardLevels": 1, "rewardLoot": 1, "tags": ["Mensch"],
+    "effects": [ { "type": "ConditionalCombatBonus", "amount": 2, "playerDepartment": "qa" } ],
+    "badStuff": [ { "type": "LoseSlot", "slot": "head" } ]
+  },
+  {
+    "id": "monster-impatient-po", "name": "Der ungeduldige Product Owner", "deck": "ticket", "kind": "monster", "count": 3,
+    "flavor": "Kurze Frage: Warum ist das noch nicht live?",
+    "rulesText": "Stufe 5. Schlimme Dinge: Verliere 1 Stufe.",
+    "level": 5, "rewardLevels": 1, "rewardLoot": 2, "tags": ["Mensch"],
+    "badStuff": [ { "type": "LoseLevels", "amount": 1 } ]
+  },
+  {
+    "id": "monster-legacy-2012", "name": "Der veraltete Legacy-Code von 2012", "deck": "ticket", "kind": "monster", "count": 3,
+    "flavor": "Kommentar im Code: ‚Bitte nicht anfassen. Ich weiß auch nicht warum.‘",
+    "rulesText": "Stufe 8. Schlimme Dinge: Verliere eine deiner Hände (Hand-Ausrüstung).",
+    "level": 8, "rewardLevels": 1, "rewardLoot": 2, "tags": ["Legacy"],
+    "badStuff": [ { "type": "LoseSlot", "slot": "hands" } ]
+  },
+  {
+    "id": "monster-endless-meeting", "name": "Die unendliche Meeting-Schleife", "deck": "ticket", "kind": "monster", "count": 3,
+    "flavor": "Dieses Meeting hätte eine E-Mail sein können. Ist es aber nicht.",
+    "rulesText": "Stufe 12. Verfolgt nur Spieler ab Stufe 3. Schlimme Dinge: Verliere 2 Stufen.",
+    "level": 12, "rewardLevels": 2, "rewardLoot": 3, "tags": ["Meeting"], "noPursuitBelowLevel": 3,
+    "badStuff": [ { "type": "LoseLevels", "amount": 2 } ]
+  },
+  {
+    "id": "curse-unlocked-pc", "name": "Du hast vergessen, deinen Rechner zu sperren …", "deck": "ticket", "kind": "curse", "count": 2,
+    "flavor": "Die Kollegen haben dir ein neues Hintergrundbild verpasst. Und ein Teil deines Setups gleich mit.",
+    "rulesText": "Gib einen angelegten Gegenstand an den linken Nachbarn. Schutz: Security-Fluch.",
+    "tags": ["Security"],
+    "effects": [ { "type": "GiveEquippedItemToNeighbor", "direction": "left" } ]
+  },
+  {
+    "id": "curse-master-conflict", "name": "Konflikt im Master-Branch", "deck": "ticket", "kind": "curse", "count": 2,
+    "flavor": "Zwei Merge-Marker, null Freunde.",
+    "rulesText": "Lege 2 zufällige Handkarten ab.",
+    "effects": [ { "type": "DiscardHand", "count": 2 } ]
+  },
+  {
+    "id": "curse-pipeline-red", "name": "Die Pipeline ist rot", "deck": "ticket", "kind": "curse", "count": 2,
+    "flavor": "Lag am Flaky Test. Behauptet jeder.",
+    "rulesText": "-2 auf deine Kampfstärke in deinem nächsten Zug.",
+    "effects": [ { "type": "NextTurnPenalty", "amount": 2 } ]
+  },
+  {
+    "id": "curse-monday-meeting", "name": "Montagmorgen-Meeting um 8:00 Uhr", "deck": "ticket", "kind": "curse", "count": 2,
+    "flavor": "Agenda: Wie wir weniger Meetings haben.",
+    "rulesText": "Verliere 1 Stufe.",
+    "effects": [ { "type": "LoseLevels", "amount": 1 } ]
+  },
+  {
+    "id": "dept-cross-platform", "name": "Abteilung Cross-Platform", "deck": "ticket", "kind": "department", "count": 1, "key": "cross-platform",
+    "flavor": "Läuft überall. Fast. Auf dem Toaster noch nicht.",
+    "rulesText": "+1 auf Fluchtwürfe.",
+    "effects": [ { "type": "EscapeBonus", "amount": 1 } ]
+  },
+  {
+    "id": "dept-native", "name": "Abteilung Native", "deck": "ticket", "kind": "department", "count": 1, "key": "native",
+    "flavor": "Zwei Codebasen, doppelter Spaß, dreifacher Kaffeeverbrauch.",
+    "rulesText": "+1 Kampfstärke.",
+    "effects": [ { "type": "CombatBonus", "amount": 1 } ]
+  },
+  {
+    "id": "dept-cloud-platform", "name": "Abteilung Cloud-Plattform", "deck": "ticket", "kind": "department", "count": 1, "key": "cloud-platform",
+    "flavor": "Das Legacy-System läuft jetzt in der Cloud. Nur teurer.",
+    "rulesText": "+3 Kampfstärke gegen Legacy-Monster.",
+    "effects": [ { "type": "ConditionalCombatBonus", "amount": 3, "monsterTag": "Legacy" } ]
+  },
+  {
+    "id": "dept-team-assistant", "name": "Abteilung Team-Assistenz", "deck": "ticket", "kind": "department", "count": 1, "key": "team-assistant",
+    "flavor": "Weiß, wer was wo hat. Und wer den Kuchen mitbringt.",
+    "rulesText": "Immun gegen Security-Flüche. Wer hilft, bekommt dafür 1 Stufe.",
+    "effects": [ { "type": "CurseImmunity", "curseTag": "Security" }, { "type": "HelpingGrantsLevel" } ]
+  },
+  {
+    "id": "dept-qa", "name": "Abteilung QA", "deck": "ticket", "kind": "department", "count": 1, "key": "qa",
+    "flavor": "Hat deinen Bug schon gefunden, bevor du ihn eingebaut hast.",
+    "rulesText": "Bei Gleichstand im Kampf gewinnst du.",
+    "effects": [ { "type": "TiesWin" } ]
+  },
+  {
+    "id": "dept-ai-team", "name": "Abteilung KI-Team", "deck": "ticket", "kind": "department", "count": 1, "key": "ai-team",
+    "flavor": "Ersetzt Menschen. Erst mal nur die Meetings.",
+    "rulesText": "+2 Kampfstärke gegen Mensch-Monster.",
+    "effects": [ { "type": "ConditionalCombatBonus", "amount": 2, "monsterTag": "Mensch" } ]
+  },
+  {
+    "id": "lang-csharp", "name": "Sprache C#", "deck": "ticket", "kind": "language", "count": 1, "key": "csharp",
+    "flavor": "Schön getypt, schön eingerückt, schön ausgelastet.",
+    "rulesText": "+1 Kampfstärke gegen Legacy-Monster.",
+    "effects": [ { "type": "ConditionalCombatBonus", "amount": 1, "monsterTag": "Legacy" } ]
+  },
+  {
+    "id": "lang-kotlin", "name": "Sprache Kotlin", "deck": "ticket", "kind": "language", "count": 1, "key": "kotlin",
+    "flavor": "Java, aber mit weniger Semikolon-Reue.",
+    "rulesText": "+1 auf Fluchtwürfe.",
+    "effects": [ { "type": "EscapeBonus", "amount": 1 } ]
+  },
+  {
+    "id": "lang-python", "name": "Sprache Python", "deck": "ticket", "kind": "language", "count": 1, "key": "python",
+    "flavor": "Läuft. Fragt nicht, wie.",
+    "rulesText": "+1 Kampfstärke.",
+    "effects": [ { "type": "CombatBonus", "amount": 1 } ]
+  },
+  {
+    "id": "special-full-stack", "name": "Full-Stack", "deck": "ticket", "kind": "special", "count": 1,
+    "flavor": "Macht Frontend, Backend und die Kaffeemaschine.",
+    "rulesText": "Du darfst bis zu 2 Abteilungen haben.",
+    "effects": [ { "type": "MaxDepartments", "max": 2 } ]
+  },
+  {
+    "id": "special-polyglot", "name": "Polyglott", "deck": "ticket", "kind": "special", "count": 1,
+    "flavor": "Spricht fünf Sprachen. Alle mit Stack-Overflow-Akzent.",
+    "rulesText": "Du darfst bis zu 2 Sprachen haben.",
+    "effects": [ { "type": "MaxLanguages", "max": 2 } ]
+  },
+  {
+    "id": "special-wandering-bug", "name": "Wandernder Bug", "deck": "ticket", "kind": "special", "count": 2,
+    "flavor": "Taucht nur in Produktion auf. Immer freitags.",
+    "rulesText": "Im Kampf spielbar: Ein Monster aus deiner Hand kommt zum Kampf dazu.",
+    "effects": [ { "type": "AddMonsterToCombat" } ]
+  },
+  {
+    "id": "equip-rider", "name": "JetBrains Rider", "deck": "loot", "kind": "equipment", "count": 3,
+    "flavor": "Indiziert noch. Seit Dienstag.",
+    "rulesText": "Hände: 1. +3 Kampfstärke. Wert 600.",
+    "slot": "hands", "hands": 1, "bonus": 3, "value": 600
+  },
+  {
+    "id": "equip-vscode", "name": "VS Code (mit 45 Extensions)", "deck": "loot", "kind": "equipment", "count": 3,
+    "flavor": "Startet in 12 Sekunden. Die Extensions streiten noch.",
+    "rulesText": "Hände: 1. +2 Kampfstärke. Wert 400.",
+    "slot": "hands", "hands": 1, "bonus": 2, "value": 400
+  },
+  {
+    "id": "equip-visual-studio", "name": "Visual Studio", "deck": "loot", "kind": "equipment", "count": 3,
+    "flavor": "Braucht beide Hände und 40 GB Festplatte.",
+    "rulesText": "Hände: 2. +4 Kampfstärke. Wert 800.",
+    "slot": "hands", "hands": 2, "bonus": 4, "value": 800
+  },
+  {
+    "id": "equip-nc-headphones", "name": "Noise-Cancelling-Kopfhörer", "deck": "loot", "kind": "equipment", "count": 3,
+    "flavor": "Dein Kollege redet seit 10 Minuten. Du hast nichts gehört.",
+    "rulesText": "Kopf. +1 Kampfstärke. Wert 300.",
+    "slot": "head", "hands": 0, "bonus": 1, "value": 300
+  },
+  {
+    "id": "equip-gaming-socks", "name": "Gaming-Socken", "deck": "loot", "kind": "equipment", "count": 3,
+    "flavor": "Plus 5 auf Fokus, minus 5 auf Geruch.",
+    "rulesText": "Füße. +1 Kampfstärke. Wert 200.",
+    "slot": "feet", "hands": 0, "bonus": 1, "value": 200
+  },
+  {
+    "id": "equip-ultrawide", "name": "49-Zoll-Ultrawide-Monitor", "deck": "loot", "kind": "equipment", "count": 3,
+    "flavor": "Passt auf keinen Schreibtisch, aber der Code steht endlich auf einer Zeile.",
+    "rulesText": "Großes Item. +3 Kampfstärke. Wert 700.",
+    "slot": "big", "hands": 0, "bonus": 3, "value": 700
+  },
+  {
+    "id": "oneshot-cold-coffee", "name": "Kalter Filterkaffee von gestern", "deck": "loot", "kind": "oneShot", "count": 5, "value": 100,
+    "flavor": "Schmeckt nach Entscheidungen, die man nicht treffen wollte.",
+    "rulesText": "Einmalig im Kampf: +2 Kampfstärke. Danach -1 auf deine Kampfstärke im nächsten Zug.",
+    "effects": [ { "type": "CombatBonus", "amount": 2 }, { "type": "NextTurnPenalty", "amount": 1 } ]
+  },
+  {
+    "id": "levelup-raise", "name": "Gehaltserhöhung", "deck": "loot", "kind": "levelUp", "count": 4,
+    "flavor": "2 % brutto. Immerhin etwas.",
+    "rulesText": "Steige 1 Stufe auf.",
+    "effects": [ { "type": "GainLevels", "amount": 1 } ]
+  },
+  {
+    "id": "oneshot-remote-day", "name": "Remote-Tag", "deck": "loot", "kind": "oneShot", "count": 3, "value": 200,
+    "flavor": "Kamera aus, Problem ausgesessen.",
+    "rulesText": "Einmalig bei der Flucht: Du entkommst automatisch. Wert 200.",
+    "effects": [ { "type": "AutoEscape" } ]
+  }
+]

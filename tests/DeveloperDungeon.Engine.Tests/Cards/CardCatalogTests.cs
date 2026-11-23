@@ -27,6 +27,15 @@ public class CardCatalogTests
     }
 
     [Fact]
+    public void EffectWithTypeNotFirst_Deserializes()
+    {
+        var json = Mon("m", """, "effects": [ { "amount": 2, "type": "CombatBonus" } ]""");
+        var catalog = CardCatalog.FromJson("[" + json + "]");
+        var effect = Assert.IsType<CombatBonus>(catalog.Get("m").Effects[0]);
+        Assert.Equal(2, effect.Amount);
+    }
+
+    [Fact]
     public void Get_UnknownId_Throws() =>
         Assert.Throws<KeyNotFoundException>(() => TestData.Catalog.Get("nope"));
 
