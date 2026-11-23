@@ -28,6 +28,7 @@ internal static class CommandGuard
     /// <summary>Befehle, die trotz offener Auswahl erlaubt sind. Task 5 ergänzt ResolveChoice, Task 10 die Werkzeugkasten-Befehle (je eine Zeile).</summary>
     private static bool AllowedWhilePending(GameCommand command) => command switch
     {
+        ResolveChoice => true,
         _ => false,
     };
 

@@ -110,6 +110,8 @@ public sealed class Game
                 EquipCard cmd => EquipRules.Handle(_state, Catalog, _rng, cmd),
                 UnequipCard cmd => EquipRules.Handle(_state, Catalog, _rng, cmd),
                 DiscardOwnCard cmd => EquipRules.Handle(_state, Catalog, _rng, cmd),
+                PlayCard cmd => CardPlayRules.Handle(_state, Catalog, _rng, cmd),
+                ResolveChoice cmd => ChoiceRules.Handle(_state, Catalog, cmd),
                 _ => CommandResult.Rejected("Unbekannter Befehl."),
             };
 
