@@ -64,7 +64,7 @@ public class CardArtCatalogTests
         }
     }
 
-    private static string FindWwwroot()
+    internal static string FindWwwroot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null)
