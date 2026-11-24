@@ -1,0 +1,65 @@
+@page "/neu"
+@using DeveloperDungeon.Web.Logic
+@inject TableController Table
+@inject NavigationManager Nav
+
+<PageTitle>Neues Spiel – Developer Dungeon</PageTitle>
+
+<h1>Neues Spiel</h1>
+
+<form @onsubmit="StartAsync" class="setup-form">
+    @for (var i = 0; i < _form.Rows.Count; i++)
+    {
+        var index = i;
+        var row = _form.Rows[i];
+        <div class="dd-panel setup-row">
+            <input type="text" class="setup-name" placeholder="Spieler @(index + 1)" aria-label="Name von Spieler @(index + 1)"
+                   maxlength="20" @bind="row.Name" @bind:event="oninput" />
+            <div class="setup-colors" role="radiogroup" aria-label="Farbe">
+                @foreach (var color in PlayerColors.All)
+                {
+                    <button type="button" role="radio" aria-checked="@(row.Color == color.Hex)" title="@color.Name"
+                            class="setup-color @(row.Color == color.Hex ? "selected" : "")"
+                            style="background:@color.Hex" @onclick="() => row.Color = color.Hex"></button>
+                }
+            </div>
+            @if (_form.Rows.Count > SetupForm.MinPlayers)
+            {
+                <button type="button" class="dd-button" @onclick="() => _form.RemovePlayer(index)">Spieler entfernen</button>
+            }
+        </div>
+    }
+
+    @if (_form.Rows.Count < SetupForm.MaxPlayers)
+    {
+        <button type="button" class="dd-button" @onclick="_form.AddPlayer">Spieler hinzufügen</button>
+    }
+
+    @if (_errors.Count > 0)
+    {
+        <ul class="setup-errors" role="alert">
+            @foreach (var error in _errors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    }
+
+    <button type="submit" class="dd-button">Los geht's</button>
+</form>
+
+@code {
+    private readonly SetupForm _form = new();
+    private IReadOnlyList<string> _errors = [];
+
+    private async Task StartAsync()
+    {
+        _errors = _form.Validate();
+        if (_errors.Count > 0)
+        {
+            return;
+        }
+        await Table.StartNewGameAsync(_form.ToPlayers(), (ulong)Random.Shared.NextInt64());
+        Nav.NavigateTo("spiel");
+    }
+}

@@ -1,0 +1,16 @@
+.home-menu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-3);
+    max-width: 24rem;
+}
+
+.home-menu .dd-button {
+    text-align: center;
+    text-decoration: none;
+}
+
+.home-hint {
+    max-width: 24rem;
+    color: var(--dd-danger);
+}

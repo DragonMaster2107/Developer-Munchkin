@@ -1,5 +1,37 @@
 @page "/"
+@using DeveloperDungeon.Web.Logic
+@inject TableController Table
+@inject NavigationManager Nav
 
 <PageTitle>Developer Dungeon</PageTitle>
 
 <h1>Developer Dungeon</h1>
+
+@if (_loaded)
+{
+    @if (_result == ResumeResult.Incompatible)
+    {
+        <p class="dd-panel home-hint" role="alert">Der gespeicherte Spielstand passt nicht mehr zu dieser Version.</p>
+    }
+    <nav class="home-menu">
+        @if (_result == ResumeResult.Resumed)
+        {
+            <button type="button" class="dd-button" @onclick='() => Nav.NavigateTo("spiel")'>Fortsetzen</button>
+        }
+        <a class="dd-button" href="neu">Neues Spiel</a>
+        <a class="dd-button" href="regeln">Regeln</a>
+        <a class="dd-button" href="karten">Kartengalerie</a>
+        <a class="dd-button" href="einstellungen">Einstellungen</a>
+    </nav>
+}
+
+@code {
+    private bool _loaded;
+    private ResumeResult _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _result = await Table.TryResumeAsync();
+        _loaded = true;
+    }
+}

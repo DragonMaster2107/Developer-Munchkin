@@ -1,0 +1,43 @@
+.setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-3);
+    max-width: 32rem;
+}
+
+.setup-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-2);
+}
+
+.setup-name {
+    font: inherit;
+    padding: var(--dd-space-2);
+    border: 2px solid var(--dd-ink);
+    border-radius: var(--dd-radius);
+}
+
+.setup-colors {
+    display: flex;
+    gap: var(--dd-space-2);
+    flex-wrap: wrap;
+}
+
+.setup-color {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    border: 2px solid var(--dd-ink);
+    cursor: pointer;
+}
+
+.setup-color.selected {
+    outline: 3px solid var(--dd-ink);
+    outline-offset: 2px;
+}
+
+.setup-errors {
+    color: var(--dd-danger);
+    margin: 0;
+}

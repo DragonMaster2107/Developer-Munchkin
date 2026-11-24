@@ -1,0 +1,43 @@
+@page "/einstellungen"
+@using DeveloperDungeon.Web.Logic
+@inject SettingsStore Store
+
+<PageTitle>Einstellungen – Developer Dungeon</PageTitle>
+
+<h1>Einstellungen</h1>
+
+@if (_settings is not null)
+{
+    <div class="dd-panel settings-panel">
+        <label>
+            <input type="checkbox" checked="@_settings.AnimationsEnabled" @onchange="OnAnimationsChanged" />
+            Animationen
+        </label>
+        <label>
+            Countdown (Sekunden)
+            <input type="number" min="0" max="10" value="@_settings.CountdownSeconds" @onchange="OnCountdownChanged" />
+        </label>
+    </div>
+}
+<p><a href="">Zurück</a></p>
+
+@code {
+    private GameSettings? _settings;
+
+    protected override async Task OnInitializedAsync() => _settings = await Store.LoadAsync();
+
+    private Task OnAnimationsChanged(ChangeEventArgs e) =>
+        SaveAsync(_settings! with { AnimationsEnabled = e.Value is true });
+
+    private Task OnCountdownChanged(ChangeEventArgs e)
+    {
+        var seconds = int.TryParse(e.Value?.ToString(), out var parsed) ? parsed : _settings!.CountdownSeconds;
+        return SaveAsync(_settings! with { CountdownSeconds = Math.Clamp(seconds, 0, 10) });
+    }
+
+    private async Task SaveAsync(GameSettings settings)
+    {
+        _settings = settings;
+        await Store.SaveAsync(settings);
+    }
+}

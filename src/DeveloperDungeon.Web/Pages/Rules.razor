@@ -1,0 +1,95 @@
+@page "/regeln"
+@using DeveloperDungeon.Engine.Rules
+
+<PageTitle>Regeln – Developer Dungeon</PageTitle>
+
+<h1>Regeln</h1>
+
+<section class="dd-panel rules-section">
+    <h2>Ziel und Stufenleiter</h2>
+    <p>
+        Alle starten als Unbezahlter Praktikant. Wer als Erste/r Stufe 10 (CTO) erreicht, gewinnt sofort.
+        Die letzte Stufe gibt es nur durch einen gewonnenen Kampf – Karten und Verkäufe reichen dafür nicht.
+        Unter Stufe 1 sinkt niemand.
+    </p>
+    <ol class="rules-levels">
+        @for (var level = 1; level <= 10; level++)
+        {
+            <li value="@level">@LevelTitles.For(level)</li>
+        }
+    </ol>
+</section>
+
+<section class="dd-panel rules-section">
+    <h2>Die zwei Stapel</h2>
+    <p>
+        Der Ticket-Stapel enthält Monster, Verstärker, Flüche, Abteilungen, Sprachen und Sonderkarten.
+        Im Loot-Stapel liegen Ausrüstung, Einweg-Gegenstände, Stufe-hoch-Karten und weitere Sonderkarten.
+        Jeder Stapel hat einen Ablagestapel; ist ein Stapel aufgebraucht, wird dessen Ablage neu gemischt.
+    </p>
+</section>
+
+<section class="dd-panel rules-section">
+    <h2>Spielstart</h2>
+    <p>
+        Es spielen 3 bis 6 Personen mit Namen und Farbe. Jede startet auf Stufe 1 mit je vier Ticket- und Loot-Karten
+        verdeckt auf der Hand. In einer Aufbau-Runde legt reihum jede Person aus, was sie möchte: Abteilung, Sprache
+        und Ausrüstung. Wer beginnt, entscheidet der Zufall.
+    </p>
+</section>
+
+<section class="dd-panel rules-section">
+    <h2>Dein Charakter</h2>
+    <p>
+        Du hast höchstens eine Abteilung und eine Sprache (mit den Sonderkarten Full-Stack bzw. Polyglott jeweils zwei).
+        Beide schenken dir Fähigkeiten. Ausrüstung gehört in Slots: Kopf, Körper, Füße, zwei Hände, ein großes Item,
+        dazu beliebig viele kleine Items. Manches passt nur zu bestimmten Abteilungen oder Sprachen.
+        In deinem Zug und außerhalb von Kämpfen darfst du alles frei wechseln oder in den Rucksack legen.
+    </p>
+</section>
+
+<section class="dd-panel rules-section">
+    <h2>Dein Zug</h2>
+    <ol>
+        <li>Ticket öffnen: Die oberste Karte wird aufgedeckt. Ein Monster löst einen Kampf aus, ein Fluch trifft dich sofort, alles andere wandert auf deine Hand.</li>
+        <li>Gab es keinen Kampf, wählst du: Ärger suchen (ein Monster aus der Hand spielen und bekämpfen) oder Backlog abarbeiten (ein Ticket verdeckt ziehen).</li>
+        <li>Feierabend: Du darfst höchstens 5 Karten behalten. Den Rest bekommt, wer die niedrigste Stufe hat; bist du selbst Letzte/r, wird abgeworfen.</li>
+    </ol>
+    <p>
+        Im eigenen Zug kannst du zusätzlich Items verkaufen (je 1000 Credits eine Stufe, nie auf Stufe 10) und Stufe-hoch-Karten spielen.
+        Flüche, Einweg-Gegenstände und Monster-Verstärker dürfen auch in fremden Zügen ins Spiel kommen.
+    </p>
+</section>
+
+<section class="dd-panel rules-section">
+    <h2>Kampf</h2>
+    <p>
+        Deine Stärke ist deine Stufe plus Boni aus Ausrüstung, Fähigkeiten und Einweg-Gegenständen, bei Hilfe zusätzlich die
+        Stärke des Helfers. Das Monster zählt Monsterstufe plus Verstärker und situative Boni. Du gewinnst nur, wenn du
+        stärker bist – bei Gleichstand siegt das Monster. Als Lohn gibt es die Stufen und Loot-Karten der Monsterkarte.
+    </p>
+    <p>
+        Verlierst du, würfelst du eine Flucht (W6): bei 5 oder 6 entkommst du, sonst passieren die Schlimmen Dinge der Karte.
+        Mehrere Monster addieren Stärke und Belohnung; geflohen wird für jedes einzeln.
+    </p>
+    <p>
+        Du darfst genau eine Person um Hilfe bitten. Die anderen nennen eine Forderung in Loot-Karten, du nimmst ein Angebot an
+        oder lehnst alle ab. Bei einem Sieg verteilt die App den Loot nach der Absprache, die helfende Person wählt zuerst.
+    </p>
+    <p>
+        Eingreifen: Jede Person kann über die Spielerleiste Karten in den Kampf spielen. Nach „Kampf auswerten“ läuft
+        ein Countdown („Letzte Chance!“), der bei jedem Eingreifen neu startet. Auch außerhalb von Kämpfen kannst du
+        mit „Ich spiel was“ etwa einen Fluch spielen.
+    </p>
+</section>
+
+<section class="dd-panel rules-section">
+    <h2>Werkzeugkasten</h2>
+    <p>
+        Nicht alles ist automatisiert. Der Werkzeugkasten erlaubt jederzeit: Stufen um 1 ändern, Karten zwischen Personen
+        verschieben, Karten abwerfen oder aus dem Ablagestapel holen, Kampfstärken anpassen und würfeln. Alles landet im
+        Spielprotokoll. Exotische Karten zeigen ihren Text groß an, und ihr setzt sie damit selbst um.
+    </p>
+</section>
+
+<p><a href="">Zurück</a></p>

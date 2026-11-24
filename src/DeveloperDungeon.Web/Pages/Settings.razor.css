@@ -1,0 +1,6 @@
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-3);
+    max-width: 24rem;
+}

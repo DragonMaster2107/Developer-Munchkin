@@ -1,0 +1,8 @@
+.rules-section {
+    max-width: 40rem;
+    margin-bottom: var(--dd-space-3);
+}
+
+.rules-section h2 {
+    margin-top: 0;
+}
