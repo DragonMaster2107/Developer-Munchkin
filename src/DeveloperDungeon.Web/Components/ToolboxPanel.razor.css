@@ -1,0 +1,37 @@
+.toolbox {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-3);
+}
+
+.toolbox-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dd-space-3); }
+.toolbox-head h2, .toolbox-section h3 { margin: 0; }
+.toolbox-hint { margin: 0; color: var(--dd-muted); }
+
+.toolbox-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dd-space-2);
+}
+
+.toolbox-section h3 { flex-basis: 100%; }
+.toolbox-section select { min-height: 44px; font-size: 1rem; padding: 0 var(--dd-space-2); }
+
+.toolbox-group { flex-basis: 100%; display: flex; flex-direction: column; gap: var(--dd-space-1); }
+.toolbox-group-label { font-weight: 700; }
+.toolbox-cards { display: flex; flex-wrap: wrap; gap: var(--dd-space-2); }
+.toolbox-pick { border-radius: var(--dd-radius); }
+.toolbox-pick.selected { outline: var(--dd-outline); outline-offset: 2px; }
+.toolbox-selected { flex-basis: 100%; margin: 0; }
+
+.die-result {
+    min-width: 4rem;
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 800;
+    border: var(--dd-outline);
+    border-radius: var(--dd-radius);
+    box-shadow: var(--dd-shadow);
+    background: var(--dd-loot-bg);
+}

@@ -1,0 +1,160 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.Events
+@using DeveloperDungeon.Engine.State
+@using DeveloperDungeon.Engine.Views
+@using DeveloperDungeon.Web.Logic
+@inject TableController Game
+
+@{
+    var view = Game.View;
+    var actor = Game.ActorId;
+    var levelPlayer = view.Players.Any(p => p.Id == _levelPlayerId) ? _levelPlayerId! : view.Players[0].Id;
+    var targetPlayer = view.Players.Any(p => p.Id == _targetPlayerId) ? _targetPlayerId! : actor;
+    var groups = Groups(view);
+    var selected = groups.SelectMany(g => g.Cards.Select(c => (Group: g, Card: c))).FirstOrDefault(x => x.Card.InstanceId == _selectedId);
+}
+
+<section class="toolbox dd-panel" aria-label="Werkzeugkasten">
+    <div class="toolbox-head">
+        <h2>Werkzeugkasten</h2>
+        <button type="button" class="dd-button" @onclick="OnClose">Schließen</button>
+    </div>
+    <p class="toolbox-hint">Für Korrekturen und Hausregeln – alles landet im Protokoll.</p>
+
+    <div class="toolbox-section" role="group" aria-label="Stufe ändern">
+        <h3>Stufe ändern</h3>
+        <select aria-label="Spieler für Stufe" @bind="_levelPlayerId" @bind:event="onchange">
+            @foreach (var p in view.Players)
+            {
+                <option value="@p.Id" selected="@(p.Id == levelPlayer)">@p.Name (Stufe @p.Level)</option>
+            }
+        </select>
+        <button type="button" class="dd-button" @onclick="() => Send(new ManualAdjustLevel(actor, levelPlayer, -1))">−1</button>
+        <button type="button" class="dd-button" @onclick="() => Send(new ManualAdjustLevel(actor, levelPlayer, 1))">+1</button>
+    </div>
+
+    <div class="toolbox-section" role="group" aria-label="Karte verschieben">
+        <h3>Karte verschieben</h3>
+        @foreach (var group in groups)
+        {
+            <div class="toolbox-group" aria-label="@group.Label">
+                <span class="toolbox-group-label">@group.Label</span>
+                <div class="toolbox-cards">
+                    @foreach (var card in group.Cards)
+                    {
+                        <div class="toolbox-pick @(card.InstanceId == _selectedId ? "selected" : "")" @key="card.InstanceId">
+                            <CardView Card="Game.Catalog.Get(card.CardId)" Size="CardSize.Small" OnClick="() => _selectedId = card.InstanceId" />
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (selected.Card is not null)
+        {
+            <p class="toolbox-selected" role="status">Gewählt: <strong>@Game.Catalog.Get(selected.Card.CardId).Name</strong></p>
+            <select aria-label="Zielspieler" @bind="_targetPlayerId" @bind:event="onchange">
+                @foreach (var p in view.Players)
+                {
+                    <option value="@p.Id" selected="@(p.Id == targetPlayer)">@p.Name</option>
+                }
+            </select>
+            @if (selected.Group.IsDiscard)
+            {
+                <button type="button" class="dd-button" @onclick="() => Send(new ManualTakeFromDiscard(actor, selected.Card.InstanceId, targetPlayer))">Von der Ablage nehmen</button>
+            }
+            <select aria-label="Zielzone" @bind="_targetZone" @bind:event="onchange">
+                @foreach (var (zone, label) in Zones)
+                {
+                    <option value="@zone" selected="@(zone == _targetZone)">@label</option>
+                }
+            </select>
+            <button type="button" class="dd-button" @onclick="() => Send(new ManualMoveCard(actor, selected.Card.InstanceId, targetPlayer, _targetZone))">Karte verschieben</button>
+            @if (!selected.Group.IsDiscard)
+            {
+                <button type="button" class="dd-button" @onclick="() => Send(new ManualDiscard(actor, selected.Card.InstanceId))">Karte abwerfen</button>
+            }
+        }
+        else
+        {
+            <p class="toolbox-selected">Wähle zuerst eine Karte.</p>
+        }
+    </div>
+
+    @if (view.Combat is not null)
+    {
+        <div class="toolbox-section" role="group" aria-label="Kampfstärke anpassen">
+            <h3>Kampfstärke anpassen</h3>
+            <select aria-label="Seite" @bind="_side" @bind:event="onchange">
+                <option value="@Side.Player" selected="@(_side == Side.Player)">Spieler</option>
+                <option value="@Side.Monster" selected="@(_side == Side.Monster)">Monster</option>
+            </select>
+            <button type="button" class="dd-button" @onclick="() => Send(new ManualCombatAdjust(actor, _side, -1))">−1 Kampfstärke</button>
+            <button type="button" class="dd-button" @onclick="() => Send(new ManualCombatAdjust(actor, _side, 1))">+1 Kampfstärke</button>
+        </div>
+    }
+
+    <div class="toolbox-section" role="group" aria-label="Würfeln">
+        <h3>Würfeln</h3>
+        <button type="button" class="dd-button" @onclick="() => Send(new RollDie(actor))">Würfeln</button>
+        @if (Game.LastEvents.OfType<DieRolled>().FirstOrDefault() is { } rolled)
+        {
+            <div class="die-result" role="status" aria-label="Wurfergebnis">@rolled.Roll</div>
+        }
+    </div>
+</section>
+
+@code {
+    private sealed record CardGroup(string Label, IReadOnlyList<CardInstance> Cards, bool IsDiscard = false);
+
+    private static readonly (Zone Zone, string Label)[] Zones =
+    [
+        (Zone.Hand, "Hand"), (Zone.Equipped, "Ausrüstung"), (Zone.Backpack, "Rucksack"), (Zone.Department, "Abteilung"), (Zone.Language, "Sprache"),
+    ];
+
+    private string? _levelPlayerId;
+    private string? _targetPlayerId;
+    private int? _selectedId;
+    private Zone _targetZone = Zone.Hand;
+    private Side _side = Side.Player;
+
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    /// <summary>Alle wählbaren Karten; fremde Handkarten fehlen bewusst (Privatsphäre).</summary>
+    private static List<CardGroup> Groups(GameView view)
+    {
+        var groups = new List<CardGroup>();
+        foreach (var p in view.Players)
+        {
+            groups.Add(new($"Ausrüstung von {p.Name}", p.Equipped));
+            groups.Add(new($"Rucksack von {p.Name}", p.Backpack));
+            groups.Add(new($"Abteilungen von {p.Name}", p.Departments));
+            groups.Add(new($"Sprachen von {p.Name}", p.Languages));
+        }
+        if (view.Combat is { } combat)
+        {
+            var fight = new List<CardInstance>(combat.State.Monsters);
+            fight.AddRange(combat.State.Enhancers.Values.SelectMany(e => e));
+            fight.AddRange(combat.State.OneShots.Select(o => o.Card));
+            fight.AddRange(combat.State.OtherPlayed);
+            groups.Add(new("Kampf", fight));
+        }
+        groups.Add(new("Oberste Ablage Tickets", view.TicketDiscardTop is { } t ? [t] : [], IsDiscard: true));
+        groups.Add(new("Oberste Ablage Loot", view.LootDiscardTop is { } l ? [l] : [], IsDiscard: true));
+        if (view.MyHand is { } hand)
+        {
+            groups.Add(new("Deine Hand", hand));
+        }
+        return [.. groups.Where(g => g.Cards.Count > 0)];
+    }
+
+    private async Task Send(GameCommand command)
+    {
+        var result = await Game.SendAsync(command);
+        if (result.Accepted && command is not ManualAdjustLevel and not ManualCombatAdjust and not RollDie)
+        {
+            _selectedId = null;
+        }
+    }
+}

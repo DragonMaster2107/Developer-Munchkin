@@ -35,6 +35,7 @@
         <div class="table">
             <div class="table-players">
                 <PlayerBar View="view" Catalog="Game.Catalog" CanInterject="@(view.Phase != GamePhase.Setup)" OnInterject="Game.BeginInterjection" />
+                <button type="button" class="dd-button toolbox-toggle" aria-label="Werkzeugkasten" aria-expanded="@(_toolbox ? "true" : "false")" @onclick="() => _toolbox = !_toolbox">🔧</button>
             </div>
 
             @if (view.Phase == GamePhase.Setup && Game.SetupPlayerId is { } setupId)
@@ -49,6 +50,13 @@
                 <div class="table-band dd-panel" role="status">
                     <span>@view.Players.First(p => p.Id == interjectorId).Name greift ein</span>
                     <button type="button" class="dd-button" @onclick="Game.EndInterjection">Fertig</button>
+                </div>
+            }
+
+            @if (_toolbox)
+            {
+                <div class="table-toolbox">
+                    <ToolboxPanel OnClose="() => _toolbox = false" />
                 </div>
             }
 
@@ -77,6 +85,7 @@
 @code {
     private readonly HashSet<int> _selected = [];
     private CardDefinition? _zoom;
+    private bool _toolbox;
     private string? _selectedFor;
     private int _countdownSeconds = new GameSettings().CountdownSeconds;
     private IReadOnlyList<GameEvent>? _dismissedEvents;

@@ -4,12 +4,16 @@
     grid-template-areas:
         "players players"
         "band band"
+        "toolbox toolbox"
         "middle log"
         "hand log";
     gap: var(--dd-space-3);
 }
 
-.table-players { grid-area: players; }
+.table-players { grid-area: players; display: flex; align-items: flex-start; gap: var(--dd-space-2); }
+.table-players > :first-child { flex: 1; min-width: 0; }
+.toolbox-toggle { flex: none; }
+.table-toolbox { grid-area: toolbox; }
 .table-band { grid-area: band; display: flex; align-items: center; justify-content: space-between; gap: var(--dd-space-3); }
 .table-middle { grid-area: middle; display: flex; gap: var(--dd-space-4); flex-wrap: wrap; }
 .hand-area { grid-area: hand; display: flex; flex-direction: column; gap: var(--dd-space-2); }
@@ -34,6 +38,7 @@
         grid-template-areas:
             "players"
             "band"
+            "toolbox"
             "middle"
             "hand"
             "log";
