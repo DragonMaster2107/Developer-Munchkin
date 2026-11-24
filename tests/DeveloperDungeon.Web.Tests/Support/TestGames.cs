@@ -64,6 +64,27 @@ public static class TestGames
         }
     }
 
+    /// <summary>Sucht einen Seed, bei dem der aktive Spieler ohne Kampf bis zur Phase EndTurn kommt (Hand aufgedeckt).</summary>
+    public static async Task<TableController> AtEndTurnAsync(IGameStorage storage)
+    {
+        for (ulong seed = 1; seed < 500; seed++)
+        {
+            var c = await StartedAsync(3, seed, storage);
+            c.ConfirmHandoff();
+            var actor = c.View.ActivePlayerId;
+            await c.SendAsync(new OpenTicket(actor));
+            if (c.View.Phase == GamePhase.AfterTicket && c.View.CurrentChoice is null)
+            {
+                await c.SendAsync(new WorkBacklog(actor));
+                if (c.View.Phase == GamePhase.EndTurn)
+                {
+                    return c;
+                }
+            }
+        }
+        throw new InvalidOperationException("Kein Seed mit geradlinigem Zug gefunden.");
+    }
+
     /// <summary>Sucht einen Seed, bei dem der erste Zug ohne Kampf durchspielbar ist, und liefert den Controller nach Zugende.</summary>
     public static async Task<(TableController Controller, string FirstPlayerId)> AfterFirstTurnAsync()
     {

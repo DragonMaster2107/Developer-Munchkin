@@ -157,22 +157,22 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
     {
         var session = _session ?? throw new InvalidOperationException("Es läuft kein Spiel.");
         _pendingJson = null;
+        var activeBefore = View.ActivePlayerId;
         var result = await session.SendAsync(command);
         if (result.Accepted)
         {
             LastRejection = null;
             LastEvents = result.Events;
             Refresh();
+            if (View.ActivePlayerId != activeBefore)
+            {
+                InterjectorId = null;
+                RequestDevice(View.ActivePlayerId);
+            }
+
             if (_pendingJson is not null)
             {
                 await PersistAsync(_pendingJson);
-            }
-
-            var turnEnded = result.Events.OfType<TurnEnded>().FirstOrDefault();
-            if (turnEnded is not null)
-            {
-                InterjectorId = null;
-                RequestDevice(turnEnded.NextPlayerId);
             }
         }
         else

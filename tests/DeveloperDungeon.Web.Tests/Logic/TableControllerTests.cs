@@ -253,6 +253,36 @@ public class TableControllerTests
         Assert.NotEqual("kaputt", storage.Items[StorageKeys.Save]);
     }
 
+    [Fact]
+    public async Task TurnChange_HidesHandWhileSaveIsStillPending()
+    {
+        var storage = new BlockingStorage();
+        var c = await TestGames.AtEndTurnAsync(storage);
+        var before = c.View.ActivePlayerId;
+        var giveAway = c.View.MyHand!.Skip(5).Select(x => x.InstanceId).ToList();
+        storage.Block = new TaskCompletionSource();
+
+        var pending = c.SendAsync(new EndTurn(before, giveAway));
+
+        Assert.False(pending.IsCompleted);
+        Assert.NotEqual(before, c.View.ActivePlayerId);
+        Assert.Null(c.RevealedPlayerId);
+        Assert.Null(c.View.MyHand);
+        Assert.Equal(c.View.ActivePlayerId, c.HandoffTargetId);
+
+        storage.Block.SetResult();
+        Assert.True((await pending).Accepted);
+        Assert.Null(c.RevealedPlayerId);
+    }
+
+    private sealed class BlockingStorage : IGameStorage
+    {
+        public TaskCompletionSource? Block { get; set; }
+        public Task<string?> LoadAsync(string key) => Task.FromResult<string?>(null);
+        public Task SaveAsync(string key, string value) => Block?.Task ?? Task.CompletedTask;
+        public Task RemoveAsync(string key) => Task.CompletedTask;
+    }
+
     private sealed class ThrowingStorage : IGameStorage
     {
         public bool Fail { get; set; } = true;
