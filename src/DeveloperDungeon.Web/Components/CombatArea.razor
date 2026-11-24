@@ -100,7 +100,7 @@
                 </div>
             }
 
-            @if (Game.InterjectorId is null && Game.HandoffTargetId is null)
+            @if (state.Stage == CombatStage.Fighting && Game.InterjectorId is null && Game.HandoffTargetId is null)
             {
                 <div class="interject" aria-label="Eingreifen">
                     @foreach (var p in view.Players.Where(p => p.Id != active))

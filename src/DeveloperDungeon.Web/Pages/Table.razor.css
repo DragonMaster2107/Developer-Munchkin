@@ -10,9 +10,9 @@
     gap: var(--dd-space-3);
 }
 
-.table-players { grid-area: players; display: flex; align-items: flex-start; gap: var(--dd-space-2); }
-.table-players > :first-child { flex: 1; min-width: 0; }
-.toolbox-toggle { flex: none; }
+.table-players { grid-area: players; display: flex; flex-direction: column; align-items: stretch; gap: var(--dd-space-2); min-width: 0; }
+.toolbox-toggle { align-self: flex-end; display: inline-flex; align-items: center; justify-content: center; color: var(--dd-ink); }
+.toolbox-icon { display: block; width: 1.5rem; height: 1.5rem; }
 .table-toolbox { grid-area: toolbox; }
 .table-band { grid-area: band; display: flex; align-items: center; justify-content: space-between; gap: var(--dd-space-3); }
 .table-middle { grid-area: middle; display: flex; gap: var(--dd-space-4); flex-wrap: wrap; }

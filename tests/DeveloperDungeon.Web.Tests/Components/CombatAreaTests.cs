@@ -114,6 +114,68 @@ public class CombatAreaTests : BunitContext
     }
 
     [Fact]
+    public async Task Interject_ButtonsVisibleInFight_AndHiddenDuringInterjection()
+    {
+        var (c, _) = await TestGames.InCombatAsync();
+        var cut = RenderTable(c);
+
+        Assert.NotEmpty(cut.FindAll(".interject button"));
+        Assert.NotEmpty(cut.FindAll(".player-interject"));
+
+        c.BeginInterjection(OtherPlayer(c));
+        c.ConfirmHandoff();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Empty(cut.FindAll(".interject"));
+            Assert.Empty(cut.FindAll(".player-interject"));
+        });
+
+        c.EndInterjection();
+        c.ConfirmHandoff();
+        cut.WaitForAssertion(() =>
+        {
+            Assert.NotEmpty(cut.FindAll(".interject button"));
+            Assert.NotEmpty(cut.FindAll(".player-interject"));
+        });
+    }
+
+    [Fact]
+    public async Task Interject_BarHiddenWhileFleeing()
+    {
+        var time = new FakeTimeProvider();
+        var (c, _) = await TestGames.InCombatAsync(time);
+        var active = c.View.ActivePlayerId;
+        var helper = OtherPlayer(c);
+        await c.SendAsync(new OfferHelp(helper, 0));
+        await c.SendAsync(new AcceptHelp(active, helper));
+        await c.SendAsync(new ManualCombatAdjust(active, Side.Monster, 100));
+        var cut = RenderTable(c);
+        Button(cut, ".combat-area", "Kampf auswerten").Click();
+        for (var i = 0; i < 5; i++)
+        {
+            time.Advance(Second);
+        }
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(CombatStage.Fleeing, c.View.Combat!.State.Stage);
+            Assert.Empty(cut.FindAll(".interject"));
+        });
+    }
+
+    [Fact]
+    public async Task ToolboxToggle_HasSvgIconAndTitle()
+    {
+        var (c, _) = await TestGames.InCombatAsync();
+        var cut = RenderTable(c);
+
+        var toggle = cut.Find(".toolbox-toggle");
+        Assert.Equal("Werkzeugkasten", toggle.GetAttribute("title"));
+        Assert.NotNull(toggle.QuerySelector("svg"));
+    }
+
+    [Fact]
     public async Task Choice_ShowsDialogForAffectedPlayer_AndResolves()
     {
         var c = await AtChoiceAsync();
