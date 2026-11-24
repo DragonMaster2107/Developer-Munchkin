@@ -13,9 +13,10 @@ namespace DeveloperDungeon.Web.Tests.Pages;
 
 public class TableTests : BunitContext
 {
-    private IRenderedComponent<Table> RenderTable(TableController controller)
+    private IRenderedComponent<Table> RenderTable(TableController controller, InMemoryGameStorage? storage = null)
     {
-        var storage = new InMemoryGameStorage();
+        storage ??= new InMemoryGameStorage();
+        Services.AddSingleton<NavigationManager>(new SubPathNavigationManager());
         Services.AddSingleton<IGameStorage>(storage);
         Services.AddSingleton(new SettingsStore(storage));
         Services.AddSingleton(TestGames.Catalog);
@@ -28,14 +29,30 @@ public class TableTests : BunitContext
     private static IElement Button(IRenderedComponent<Table> cut, string text) =>
         cut.FindAll("button").Single(b => b.TextContent.Trim() == text);
 
+    private NavigationManager Nav => Services.GetRequiredService<NavigationManager>();
+
     [Fact]
-    public void NoGame_RedirectsToStartPage()
+    public void NoGame_NoSave_RedirectsToStartPageInsideApp()
     {
         var controller = new TableController(TestGames.Catalog, new InMemoryGameStorage(), new FakeTimeProvider());
 
         RenderTable(controller);
 
-        Assert.EndsWith("/", Services.GetRequiredService<NavigationManager>().Uri);
+        Assert.Equal(Nav.BaseUri, Nav.Uri);
+    }
+
+    [Fact]
+    public void NoGame_ValidSave_ResumesAndShowsHandoff()
+    {
+        var storage = new InMemoryGameStorage();
+        TestGames.NewController(3, 7, storage);
+        var controller = new TableController(TestGames.Catalog, storage, new FakeTimeProvider());
+
+        var cut = RenderTable(controller, storage);
+
+        cut.WaitForAssertion(() => Assert.Contains("Gib das Gerät an", cut.Markup));
+        Assert.True(controller.HasGame);
+        Assert.Equal(SubPathNavigationManager.Base + "spiel", Nav.Uri);
     }
 
     [Fact]
@@ -202,6 +219,6 @@ public class TableTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains($"{name} ist CTO!", cut.Markup));
         Button(cut, "Zur Startseite").Click();
-        Assert.EndsWith("/", Services.GetRequiredService<NavigationManager>().Uri);
+        Assert.Equal(Nav.BaseUri, Nav.Uri);
     }
 }

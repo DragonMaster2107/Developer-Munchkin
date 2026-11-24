@@ -20,7 +20,7 @@
     {
         <div class="victory" role="dialog" aria-modal="true" aria-label="Sieg">
             <h1>@view.Players.First(p => p.Id == winnerId).Name ist CTO!</h1>
-            <button type="button" class="dd-button" @onclick='() => Nav.NavigateTo("/")'>Zur Startseite</button>
+            <button type="button" class="dd-button" @onclick='() => Nav.NavigateTo("")'>Zur Startseite</button>
         </div>
     }
     else if (Game.HandoffTargetId is { } targetId)
@@ -118,9 +118,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!Game.HasGame)
+        // Nach einem Neuladen auf /spiel ist der Speicher leer: erst den Spielstand laden, sonst zur Startseite.
+        if (!Game.HasGame && await Game.TryResumeAsync() != ResumeResult.Resumed)
         {
-            Nav.NavigateTo("/", replace: true);
+            Nav.NavigateTo("", replace: true);
             return;
         }
 
