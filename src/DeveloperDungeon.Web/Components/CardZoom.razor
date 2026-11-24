@@ -1,0 +1,16 @@
+@using DeveloperDungeon.Engine.Cards
+
+@if (Card is not null)
+{
+    <div class="zoom-overlay" role="dialog" aria-modal="true" aria-label="@Card.Name" @onclick="OnClose">
+        <div class="zoom-card" @onclick:stopPropagation="true">
+            <CardView Card="Card" Size="CardSize.Large" />
+            <button type="button" class="dd-button" @onclick="OnClose">Schließen</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public CardDefinition? Card { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}

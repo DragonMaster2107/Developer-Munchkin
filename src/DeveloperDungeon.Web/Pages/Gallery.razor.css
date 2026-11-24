@@ -1,0 +1,6 @@
+.gallery-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dd-space-3);
+    margin-bottom: var(--dd-space-4);
+}

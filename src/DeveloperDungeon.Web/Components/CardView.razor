@@ -1,0 +1,59 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Web.Logic
+
+<div class="card @FrameClass @SizeClass @(Disabled ? "card--disabled" : "")"
+     role="@(OnClick.HasDelegate ? "button" : null)"
+     tabindex="@(OnClick.HasDelegate && !Disabled ? 0 : null)"
+     aria-disabled="@(Disabled ? "true" : null)"
+     title="@(Disabled ? DisabledReason : null)"
+     @onclick="Clicked"
+     @onkeydown="KeyPressed">
+    <div class="card-head">
+        <span>@CardTexts.KindLabel(Card.Kind)</span>
+        <span class="card-badge">@CardTexts.HeaderBadge(Card)</span>
+    </div>
+    <CardArt Card="Card" />
+    <div class="card-body">
+        <div class="card-name">@Card.Name</div>
+        @if (Size != CardSize.Small)
+        {
+            <div class="card-rules">@Card.RulesText</div>
+            @if (!string.IsNullOrWhiteSpace(Card.Flavor))
+            {
+                <div class="card-flavor">@Card.Flavor</div>
+            }
+        }
+        @if (Disabled && !string.IsNullOrEmpty(DisabledReason))
+        {
+            <div class="card-reason">@DisabledReason</div>
+        }
+    </div>
+    <div class="card-foot">
+        <span>@CardTexts.FooterLeft(Card)</span>
+        <span>@CardTexts.FooterRight(Card)</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public CardDefinition Card { get; set; } = default!;
+    [Parameter] public CardSize Size { get; set; } = CardSize.Normal;
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string? DisabledReason { get; set; }
+
+    private string SizeClass => $"card--{Size.ToString().ToLowerInvariant()}";
+
+    private string FrameClass => Card.Kind switch
+    {
+        CardKind.Monster or CardKind.MonsterEnhancer => "card--monster",
+        CardKind.Curse => "card--curse",
+        CardKind.Department or CardKind.Language => "card--class",
+        CardKind.Special => "card--special",
+        _ => Card.Deck == Deck.Loot ? "card--loot" : "card--special",
+    };
+
+    private Task Clicked() => Disabled ? Task.CompletedTask : OnClick.InvokeAsync();
+
+    private Task KeyPressed(KeyboardEventArgs e) =>
+        e.Key is "Enter" or " " ? Clicked() : Task.CompletedTask;
+}

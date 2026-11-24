@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130" style="background:#e07a5f">
+<style>@keyframes crawl{0%,100%{transform:translateX(-4px)}50%{transform:translateX(4px)}}@keyframes feel{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}</style>
+<rect x="0" y="104" width="200" height="26" fill="#3d405b"/>
+<g style="animation:crawl 2.4s ease-in-out infinite">
+<g stroke="#2b2d42" stroke-width="5" stroke-linecap="round" fill="none"><path d="M76 66 L56 54 M74 76 L52 78 M78 88 L58 100 M124 66 L144 54 M126 76 L148 78 M122 88 L142 100"/></g>
+<ellipse cx="100" cy="76" rx="28" ry="26" fill="#2b2d42"/>
+<circle cx="100" cy="42" r="14" fill="#2b2d42"/>
+<g style="transform-origin:100px 32px;animation:feel 1.6s ease-in-out infinite"><path d="M94 32 L84 16 M106 32 L116 16" stroke="#2b2d42" stroke-width="4" stroke-linecap="round" fill="none"/></g>
+<path d="M100 54 V100" stroke="#f4f1de" stroke-width="3"/>
+<circle cx="94" cy="40" r="3" fill="#f4f1de"/><circle cx="106" cy="40" r="3" fill="#f4f1de"/>
+</g>
+</svg>

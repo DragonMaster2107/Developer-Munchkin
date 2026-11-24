@@ -1,0 +1,36 @@
+@page "/karten"
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Web.Components
+@using DeveloperDungeon.Web.Logic
+@inject CardCatalog Catalog
+
+<PageTitle>Kartengalerie – Developer Dungeon</PageTitle>
+
+<h1>Kartengalerie</h1>
+
+@foreach (var deck in Decks)
+{
+    <h2>@deck.Title</h2>
+    @foreach (var group in Catalog.All.Where(c => c.Deck == deck.Deck).GroupBy(c => c.Kind))
+    {
+        <h3>@CardTexts.KindLabel(group.Key)</h3>
+        <div class="gallery-grid">
+            @foreach (var card in group)
+            {
+                <CardView Card="card" OnClick="() => _zoomed = card" />
+            }
+        </div>
+    }
+}
+
+<CardZoom Card="_zoomed" OnClose="() => _zoomed = null" />
+
+@code {
+    private static readonly (Deck Deck, string Title)[] Decks =
+    [
+        (Deck.Ticket, "Ticket-Stapel"),
+        (Deck.Loot, "Loot-Stapel"),
+    ];
+
+    private CardDefinition? _zoomed;
+}

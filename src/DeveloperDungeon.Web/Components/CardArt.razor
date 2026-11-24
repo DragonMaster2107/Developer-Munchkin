@@ -1,0 +1,9 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Web.Logic
+@inject CardArtCatalog Art
+
+<img class="card-art" src="@Art.UrlFor(Card)" alt="@Card.Name" loading="lazy" />
+
+@code {
+    [Parameter, EditorRequired] public CardDefinition Card { get; set; } = default!;
+}

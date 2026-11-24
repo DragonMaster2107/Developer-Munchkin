@@ -1,0 +1,6 @@
+.card-art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 200 / 130;
+    object-fit: cover;
+}

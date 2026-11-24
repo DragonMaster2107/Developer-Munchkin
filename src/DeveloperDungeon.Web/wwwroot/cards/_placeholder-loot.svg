@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130" style="background:#f2cc8f">
+<style>@keyframes lid{0%,70%,100%{transform:rotate(0)}80%{transform:rotate(-8deg)}90%{transform:rotate(0)}}@keyframes sparkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}</style>
+<rect x="0" y="104" width="200" height="26" fill="#d4b896"/>
+<rect x="52" y="64" width="96" height="42" rx="4" fill="#8a5a2b" stroke="#2b2d42" stroke-width="3"/>
+<g style="transform-origin:52px 64px;animation:lid 2.6s ease-in-out infinite"><path d="M52 64 Q52 34 100 34 Q148 34 148 64 Z" fill="#a8703a" stroke="#2b2d42" stroke-width="3"/></g>
+<rect x="92" y="62" width="16" height="18" rx="2" fill="#f2c94c" stroke="#a07c12" stroke-width="2"/>
+<path d="M52 82 H148" stroke="#2b2d42" stroke-width="3"/>
+<g fill="#fff8dc"><path d="M40 40 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" style="transform-origin:40px 51px;animation:sparkle 2s infinite"/><path d="M158 30 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2 z" style="transform-origin:158px 38px;animation:sparkle 2s .9s infinite"/></g>
+</svg>
