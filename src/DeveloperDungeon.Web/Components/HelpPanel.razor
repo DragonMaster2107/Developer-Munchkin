@@ -1,0 +1,50 @@
+@using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.State
+@using DeveloperDungeon.Engine.Views
+@using DeveloperDungeon.Web.Logic
+@inject TableController Game
+
+@if (CanOffer || (Combat.Offers.Count > 0 && Combat.HelperId is null))
+{
+    <div class="help-panel" aria-label="Hilfe">
+        @if (CanOffer)
+        {
+            <label class="help-field">
+                <span>Forderung (Loot-Karten)</span>
+                <input type="number" min="0" @bind="_share" />
+            </label>
+            <button type="button" class="dd-button" @onclick="OfferAsync">Hilfe anbieten</button>
+        }
+        @if (Combat.HelperId is null)
+        {
+            <ul class="offers">
+                @foreach (var offer in Combat.Offers)
+                {
+                    <li @key="offer.PlayerId">
+                        <span>@NameOf(offer.PlayerId) bietet Hilfe für @offer.LootShare Loot-Karten</span>
+                        @if (CanAccept)
+                        {
+                            <button type="button" class="dd-button" @onclick="() => Game.SendAsync(new AcceptHelp(View.ActivePlayerId, offer.PlayerId))">Annehmen</button>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+}
+
+@code {
+    private int _share;
+
+    [Parameter, EditorRequired] public GameView View { get; set; } = default!;
+    [Parameter, EditorRequired] public CombatState Combat { get; set; } = default!;
+    [Parameter, EditorRequired] public string ActorId { get; set; } = "";
+
+    private bool CanOffer => Combat.HelperId is null && ActorId != View.ActivePlayerId && Game.RevealedPlayerId == ActorId;
+
+    private bool CanAccept => Game.RevealedPlayerId == View.ActivePlayerId && Game.HandoffTargetId is null;
+
+    private string NameOf(string id) => View.Players.First(p => p.Id == id).Name;
+
+    private Task OfferAsync() => Game.SendAsync(new OfferHelp(ActorId, Math.Max(0, _share)));
+}

@@ -3,6 +3,7 @@ using DeveloperDungeon.Engine.Cards;
 using DeveloperDungeon.Engine.Commands;
 using DeveloperDungeon.Engine.State;
 using DeveloperDungeon.Web.Logic;
+using Microsoft.Extensions.Time.Testing;
 
 namespace DeveloperDungeon.Web.Tests.Support;
 
@@ -10,9 +11,9 @@ public static class TestGames
 {
     public static readonly CardCatalog Catalog = CardCatalog.LoadEmbedded();
 
-    public static TableController NewController(int players = 3, ulong seed = 42, IGameStorage? storage = null)
+    public static TableController NewController(int players = 3, ulong seed = 42, IGameStorage? storage = null, FakeTimeProvider? time = null)
     {
-        var controller = new TableController(Catalog, storage ?? new InMemoryGameStorage());
+        var controller = new TableController(Catalog, storage ?? new InMemoryGameStorage(), time ?? new FakeTimeProvider());
         controller.StartNewGameAsync(Setups(players), seed).GetAwaiter().GetResult();
         return controller;
     }
@@ -30,9 +31,9 @@ public static class TestGames
         }
     }
 
-    public static async Task<TableController> StartedAsync(int players = 3, ulong seed = 42, IGameStorage? storage = null)
+    public static async Task<TableController> StartedAsync(int players = 3, ulong seed = 42, IGameStorage? storage = null, FakeTimeProvider? time = null)
     {
-        var c = NewController(players, seed, storage);
+        var c = NewController(players, seed, storage, time);
         await CompleteSetupAsync(c);
         return c;
     }
@@ -110,12 +111,12 @@ public static class TestGames
     }
 
     /// <summary>Sucht einen Seed, bei dem das erste geöffnete Ticket ein Monster ist, und führt den Controller in den Kampf.</summary>
-    public static async Task<(TableController Controller, InMemoryGameStorage Storage)> InCombatAsync()
+    public static async Task<(TableController Controller, InMemoryGameStorage Storage)> InCombatAsync(FakeTimeProvider? time = null)
     {
         for (ulong seed = 1; seed < 500; seed++)
         {
             var storage = new InMemoryGameStorage();
-            var c = await StartedAsync(3, seed, storage);
+            var c = await StartedAsync(3, seed, storage, time);
             c.ConfirmHandoff();
             await c.SendAsync(new OpenTicket(c.View.ActivePlayerId));
             if (c.View.Phase == GamePhase.Combat)

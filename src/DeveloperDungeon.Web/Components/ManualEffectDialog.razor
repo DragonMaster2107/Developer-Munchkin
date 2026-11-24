@@ -1,0 +1,17 @@
+@using DeveloperDungeon.Engine.Cards
+
+@if (Card is not null)
+{
+    <div class="manual-overlay">
+        <div class="manual-dialog dd-panel" role="dialog" aria-modal="true" aria-label="@Card.Name">
+            <CardView Card="Card" Size="CardSize.Large" />
+            <p class="manual-hint">Setzt diese Karte mit dem Werkzeugkasten um.</p>
+            <button type="button" class="dd-button" @onclick="OnClose">Schließen</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public CardDefinition? Card { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}

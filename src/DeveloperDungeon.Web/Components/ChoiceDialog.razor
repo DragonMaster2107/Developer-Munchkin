@@ -1,0 +1,35 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.State
+@using DeveloperDungeon.Engine.Views
+@using DeveloperDungeon.Web.Logic
+@inject TableController Game
+
+@if (View.CurrentChoice is { } choice && View.Players.FirstOrDefault(p => p.Id == choice.PlayerId) is { } owner)
+{
+    <div class="choice-overlay">
+        <div class="choice-dialog dd-panel" role="dialog" aria-modal="true" aria-label="Auswahl">
+            <h3>@Heading(choice, owner)</h3>
+            <div class="choice-cards">
+                @foreach (var card in owner.Equipped)
+                {
+                    <div class="choice-card" @key="card.InstanceId" data-instance="@card.InstanceId">
+                        <CardView Card="Catalog.Get(card.CardId)" Size="CardSize.Small"
+                                  OnClick="() => Game.SendAsync(new ResolveChoice(choice.PlayerId, card.InstanceId))" />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public GameView View { get; set; } = default!;
+    [Parameter, EditorRequired] public CardCatalog Catalog { get; set; } = default!;
+
+    private string Heading(PendingChoice choice, PublicPlayerView owner) => choice.Kind switch
+    {
+        ChoiceKind.DiscardSmallItem => $"{owner.Name}: Wirf ein kleines Item ab",
+        _ => $"{owner.Name}: Gib ein angelegtes Item an {View.Players.First(p => p.Id == choice.RecipientPlayerId).Name}",
+    };
+}

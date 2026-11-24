@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using DeveloperDungeon.Engine.Commands;
 using DeveloperDungeon.Engine.State;
 using DeveloperDungeon.Web.Logic;
@@ -62,7 +63,7 @@ public class TableControllerTests
         TestGames.NewController(3, 42, storage);
 
         Assert.True(storage.Items.ContainsKey(StorageKeys.Save));
-        var c2 = new TableController(TestGames.Catalog, storage);
+        var c2 = new TableController(TestGames.Catalog, storage, new FakeTimeProvider());
         Assert.Equal(ResumeResult.Resumed, await c2.TryResumeAsync());
     }
 
@@ -207,7 +208,7 @@ public class TableControllerTests
     [Fact]
     public async Task Resume_NoSave_ReturnsNoSave()
     {
-        var c = new TableController(TestGames.Catalog, new InMemoryGameStorage());
+        var c = new TableController(TestGames.Catalog, new InMemoryGameStorage(), new FakeTimeProvider());
         Assert.Equal(ResumeResult.NoSave, await c.TryResumeAsync());
         Assert.False(c.HasGame);
     }
@@ -217,7 +218,7 @@ public class TableControllerTests
     {
         var storage = new InMemoryGameStorage();
         storage.Items[StorageKeys.Save] = "{ das ist kein Spielstand";
-        var c = new TableController(TestGames.Catalog, storage);
+        var c = new TableController(TestGames.Catalog, storage, new FakeTimeProvider());
 
         Assert.Equal(ResumeResult.Incompatible, await c.TryResumeAsync());
         Assert.False(c.HasGame);
@@ -230,7 +231,7 @@ public class TableControllerTests
         var (c, storage) = await TestGames.InCombatAsync();
         var active = c.View.ActivePlayerId;
 
-        var resumed = new TableController(TestGames.Catalog, storage);
+        var resumed = new TableController(TestGames.Catalog, storage, new FakeTimeProvider());
         Assert.Equal(ResumeResult.Resumed, await resumed.TryResumeAsync());
 
         Assert.Equal(GamePhase.Combat, resumed.View.Phase);
@@ -249,7 +250,7 @@ public class TableControllerTests
         await c.FinishSetupForCurrentAsync();
         Assert.NotEqual(c.View.ActivePlayerId, c.SetupPlayerId);
 
-        var resumed = new TableController(TestGames.Catalog, storage);
+        var resumed = new TableController(TestGames.Catalog, storage, new FakeTimeProvider());
         Assert.Equal(ResumeResult.Resumed, await resumed.TryResumeAsync());
 
         Assert.Equal(GamePhase.Setup, resumed.View.Phase);
@@ -262,7 +263,7 @@ public class TableControllerTests
     {
         var storage = new InMemoryGameStorage();
         storage.Items[StorageKeys.Save] = "kaputt";
-        var c = new TableController(TestGames.Catalog, storage);
+        var c = new TableController(TestGames.Catalog, storage, new FakeTimeProvider());
         await c.StartNewGameAsync(TestGames.Setups(3), 7);
 
         Assert.NotEqual("kaputt", storage.Items[StorageKeys.Save]);

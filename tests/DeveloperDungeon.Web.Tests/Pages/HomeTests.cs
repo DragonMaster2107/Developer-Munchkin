@@ -12,6 +12,7 @@ public class HomeTests : BunitContext
     {
         Services.AddSingleton<IGameStorage>(storage);
         Services.AddSingleton(TestGames.Catalog);
+        Services.AddSingleton<TimeProvider>(TimeProvider.System);
         Services.AddScoped<TableController>();
         return Render<Home>();
     }

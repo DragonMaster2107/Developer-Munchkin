@@ -12,7 +12,7 @@ namespace DeveloperDungeon.Web.Logic;
 public enum ResumeResult { NoSave, Resumed, Incompatible }
 
 /// <summary>Steuert eine Partie am geteilten Gerät: Gerät übergeben, Aufbau-Runde, Eingreifen und Speichern.</summary>
-public sealed class TableController(CardCatalog catalog, IGameStorage storage)
+public sealed class TableController(CardCatalog catalog, IGameStorage storage, TimeProvider time) : IDisposable
 {
     public const string SaveFailedWarning = "Spielstand konnte nicht gespeichert werden.";
 
@@ -43,6 +43,58 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
     public string? Feedback { get; private set; }
 
     public event Action? Changed;
+
+    private CombatCountdown? _countdown;
+    private Task _resolution = Task.CompletedTask;
+
+    public bool CountdownRunning => _countdown?.IsRunning ?? false;
+    public int CountdownRemaining => _countdown?.RemainingSeconds ?? 0;
+
+    private CombatCountdown Countdown
+    {
+        get
+        {
+            if (_countdown is null)
+            {
+                _countdown = new CombatCountdown(time);
+                _countdown.Tick += () => Changed?.Invoke();
+                _countdown.Elapsed += () => _resolution = ResolveAfterCountdownAsync();
+            }
+            return _countdown;
+        }
+    }
+
+    public void Dispose() => _countdown?.Dispose();
+
+    /// <summary>Startet den Countdown zur Kampfauswertung; nur vom Gerät des aktiven Spielers (oder eines Eingreifenden) im laufenden Kampf.</summary>
+    public async Task RequestCombatResolutionAsync(int countdownSeconds)
+    {
+        var holdsDevice = RevealedPlayerId == View.ActivePlayerId || InterjectorId is not null;
+        if (_session is null || HandoffTargetId is not null || !holdsDevice || View.Combat is not { State.Stage: CombatStage.Fighting })
+        {
+            return;
+        }
+
+        Countdown.Start(countdownSeconds);
+        Changed?.Invoke();
+        await _resolution;
+    }
+
+    private async Task ResolveAfterCountdownAsync()
+    {
+        if (_session is null || View.Combat is not { State.Stage: CombatStage.Fighting })
+        {
+            return;
+        }
+
+        InterjectorId = null;
+        await SendAsync(new ResolveCombat(View.ActivePlayerId));
+        if (HandoffTargetId is null && RevealedPlayerId != View.ActivePlayerId)
+        {
+            RequestDevice(View.ActivePlayerId);
+            Changed?.Invoke();
+        }
+    }
 
     public async Task StartNewGameAsync(IReadOnlyList<PlayerSetup> players, ulong seed)
     {
@@ -145,6 +197,7 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
             return;
         }
 
+        _countdown?.Cancel();
         InterjectorId = playerId;
         RequestDevice(playerId);
         Changed?.Invoke();
@@ -197,6 +250,7 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
         _session = new LocalGameSession(game, json => _pendingJson = json);
         _playerCount = game.GetView(null).Players.Count;
         _pendingJson = game.Save();
+        _countdown?.Cancel();
         InterjectorId = null;
         SetupPlayerId = null;
         LastEvents = [];

@@ -1,0 +1,56 @@
+.combat-area {
+    flex: 1 1 14rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-2);
+}
+
+.combat-area h2 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.monsters, .enhancers, .oneshots, .fleeing, .interject {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dd-space-2);
+}
+
+.monster {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-1);
+}
+
+.enhancers { padding-left: var(--dd-space-3); }
+
+.oneshots { align-items: center; }
+.oneshots-label { font-size: 0.8rem; font-weight: 700; }
+
+.helper, .reward { margin: 0; }
+
+.strength {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--dd-space-2);
+    background: var(--dd-monster-bg);
+    border: var(--dd-outline);
+    border-radius: var(--dd-radius);
+}
+
+.strength-value { font-size: 1.6rem; font-weight: 800; }
+.strength-tie { font-size: 0.9rem; color: var(--dd-muted); }
+
+.countdown {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--dd-danger);
+}
+
+.interject-item { display: flex; align-items: center; gap: var(--dd-space-2); flex-wrap: wrap; }
+.interject-name { font-weight: 700; }
+
+.escape-results { margin: 0; padding-left: var(--dd-space-3); }

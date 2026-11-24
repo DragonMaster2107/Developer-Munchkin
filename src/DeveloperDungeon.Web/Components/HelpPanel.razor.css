@@ -1,0 +1,11 @@
+.help-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-2);
+}
+
+.help-field { display: flex; flex-direction: column; gap: var(--dd-space-1); font-weight: 700; }
+.help-field input { min-height: 44px; font-size: 1rem; padding: 0 var(--dd-space-2); }
+
+.offers { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--dd-space-2); }
+.offers li { display: flex; align-items: center; justify-content: space-between; gap: var(--dd-space-2); flex-wrap: wrap; }

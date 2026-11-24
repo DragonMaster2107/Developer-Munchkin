@@ -1,5 +1,6 @@
 @page "/spiel"
 @using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.Events
 @using DeveloperDungeon.Engine.Cards
 @using DeveloperDungeon.Engine.State
 @using DeveloperDungeon.Web.Components
@@ -7,6 +8,7 @@
 @implements IDisposable
 @inject TableController Game
 @inject NavigationManager Nav
+@inject SettingsStore Settings
 
 <PageTitle>Developer Dungeon – Spiel</PageTitle>
 
@@ -45,16 +47,14 @@
             else if (Game.InterjectorId is { } interjectorId)
             {
                 <div class="table-band dd-panel" role="status">
-                    <span>@view.Players.First(p => p.Id == interjectorId).Name spielt etwas</span>
-                    <button type="button" class="dd-button" @onclick="Game.EndInterjection">Zurück zum Zug</button>
+                    <span>@view.Players.First(p => p.Id == interjectorId).Name greift ein</span>
+                    <button type="button" class="dd-button" @onclick="Game.EndInterjection">Fertig</button>
                 </div>
             }
 
             <div class="table-middle">
                 <DeckArea View="view" Catalog="Game.Catalog" OnZoom="c => _zoom = c" />
-                <section class="combat-area dd-panel" aria-label="Kampf">
-                    <h2>Kampf</h2>
-                </section>
+                <CombatArea Catalog="Game.Catalog" CountdownSeconds="_countdownSeconds" />
             </div>
 
             <section class="hand-area dd-panel">
@@ -66,6 +66,8 @@
                 <LogPanel View="view" />
             </aside>
         </div>
+        <ChoiceDialog View="view" Catalog="Game.Catalog" />
+        <ManualEffectDialog Card="ManualEffectCard" OnClose="DismissManualEffect" />
     }
 }
 
@@ -76,6 +78,16 @@
     private readonly HashSet<int> _selected = [];
     private CardDefinition? _zoom;
     private string? _selectedFor;
+    private int _countdownSeconds = new GameSettings().CountdownSeconds;
+    private IReadOnlyList<GameEvent>? _dismissedEvents;
+
+    /// <summary>Karte der zuletzt gemeldeten manuellen Wirkung, bis sie geschlossen wird.</summary>
+    private CardDefinition? ManualEffectCard =>
+        ReferenceEquals(Game.LastEvents, _dismissedEvents) || Game.LastEvents.OfType<ManualEffectShown>().FirstOrDefault() is not { } shown
+            ? null
+            : Game.Catalog.Get(shown.CardId);
+
+    private void DismissManualEffect() => _dismissedEvents = Game.LastEvents;
 
     /// <summary>Gleicht die Auswahl mit der aktuell aufgedeckten Hand ab: fremde oder verschwundene Karten fallen heraus.</summary>
     private void ReconcileSelection(DeveloperDungeon.Engine.Views.GameView view)
@@ -88,7 +100,7 @@
         _selected.IntersectWith((view.MyHand ?? []).Select(c => c.InstanceId));
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (!Game.HasGame)
         {
@@ -97,6 +109,7 @@
         }
 
         Game.Changed += OnChanged;
+        _countdownSeconds = (await Settings.LoadAsync()).CountdownSeconds;
     }
 
     private void OnChanged() => _ = InvokeAsync(StateHasChanged);

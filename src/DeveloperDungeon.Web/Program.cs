@@ -12,6 +12,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 builder.Services.AddScoped<IGameStorage, BrowserGameStorage>();
 builder.Services.AddScoped<SettingsStore>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<TableController>();
 builder.Services.AddSingleton(CardCatalog.LoadEmbedded());
 

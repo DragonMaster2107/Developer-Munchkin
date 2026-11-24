@@ -1,0 +1,153 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.Events
+@using DeveloperDungeon.Engine.State
+@using DeveloperDungeon.Engine.Views
+@using DeveloperDungeon.Web.Logic
+@inject TableController Game
+
+@if (Game.View.Combat is not null || Rolls.Count > 0)
+{
+    var view = Game.View;
+    var active = view.ActivePlayerId;
+    <section class="combat-area dd-panel" aria-label="Kampf">
+        <h2>Kampf</h2>
+
+        @if (view.Combat is { } c)
+        {
+            var state = c.State;
+            var summary = c.Summary;
+
+            <div class="monsters">
+                @foreach (var monster in state.Monsters)
+                {
+                    <div class="monster" @key="monster.InstanceId">
+                        <CardView Card="Catalog.Get(monster.CardId)" Size="CardSize.Small" OnClick="() => _zoom = Catalog.Get(monster.CardId)" />
+                        @if (state.Enhancers.GetValueOrDefault(monster.InstanceId) is { Count: > 0 } enhancers)
+                        {
+                            <div class="enhancers" aria-label="Verstärker">
+                                @foreach (var enhancer in enhancers)
+                                {
+                                    <CardView Card="Catalog.Get(enhancer.CardId)" Size="CardSize.Small" OnClick="() => _zoom = Catalog.Get(enhancer.CardId)" />
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @foreach (var (side, label) in Sides)
+            {
+                var plays = state.OneShots.Where(o => o.Side == side).ToList();
+                @if (plays.Count > 0)
+                {
+                    <div class="oneshots" aria-label="@label">
+                        <span class="oneshots-label">@label</span>
+                        @foreach (var play in plays)
+                        {
+                            <CardView Card="Catalog.Get(play.Card.CardId)" Size="CardSize.Small" OnClick="() => _zoom = Catalog.Get(play.Card.CardId)" />
+                        }
+                    </div>
+                }
+            }
+
+            @if (state.OtherPlayed.Count > 0)
+            {
+                <div class="oneshots" aria-label="Weitere Karten">
+                    <span class="oneshots-label">Weitere Karten</span>
+                    @foreach (var card in state.OtherPlayed)
+                    {
+                        <CardView Card="Catalog.Get(card.CardId)" Size="CardSize.Small" OnClick="() => _zoom = Catalog.Get(card.CardId)" />
+                    }
+                </div>
+            }
+
+            @if (state.HelperId is { } helperId)
+            {
+                <p class="helper">Helfer: <strong>@NameOf(view, helperId)</strong> (fordert @state.HelperLootShare Loot-Karten)</p>
+            }
+
+            <div class="strength" role="status">
+                <span class="strength-value">Du @summary.PlayerStrength : @summary.MonsterStrength Monster</span>
+                @if (summary.PlayerWinsTies)
+                {
+                    <span class="strength-tie">Gleichstand gewinnt (QA)</span>
+                }
+            </div>
+            <p class="reward">Erwartete Belohnung: @summary.TotalRewardLevels Stufe(n), @summary.TotalRewardLoot Loot</p>
+
+            @if (state.Stage == CombatStage.Fighting)
+            {
+                <HelpPanel View="view" Combat="state" ActorId="@Game.ActorId" />
+
+                @if (Game.CountdownRunning)
+                {
+                    <p class="countdown" role="status">Letzte Chance! @Game.CountdownRemaining</p>
+                }
+                else if (Game.RevealedPlayerId == active && Game.HandoffTargetId is null)
+                {
+                    <button type="button" class="dd-button resolve" @onclick="() => Game.RequestCombatResolutionAsync(CountdownSeconds)">Kampf auswerten</button>
+                }
+            }
+            else
+            {
+                <div class="fleeing" aria-label="Flucht">
+                    @foreach (var entry in state.Fleeing.Where(f => f.UnresolvedMonsterIds.Count > 0))
+                    {
+                        <button type="button" class="dd-button" @key="entry.PlayerId"
+                                @onclick="() => Game.SendAsync(new AttemptEscape(entry.PlayerId))">@NameOf(view, entry.PlayerId) würfelt</button>
+                    }
+                </div>
+            }
+
+            @if (Game.InterjectorId is null && Game.HandoffTargetId is null)
+            {
+                <div class="interject" aria-label="Eingreifen">
+                    @foreach (var p in view.Players.Where(p => p.Id != active))
+                    {
+                        <div class="interject-item" @key="p.Id">
+                            <span class="interject-name">@p.Name</span>
+                            <button type="button" class="dd-button" @onclick="() => Game.BeginInterjection(p.Id)">Moment, ich spiel noch was!</button>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @if (Rolls.Count > 0)
+        {
+            <ul class="escape-results" aria-label="Würfelergebnisse">
+                @foreach (var roll in Rolls)
+                {
+                    <li>@RollText(view, roll)</li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+<CardZoom Card="_zoom" OnClose="() => _zoom = null" />
+
+@code {
+    private static readonly (Side Side, string Label)[] Sides = [(Side.Player, "Für die Spieler"), (Side.Monster, "Für die Monster")];
+
+    private CardDefinition? _zoom;
+
+    [Parameter, EditorRequired] public CardCatalog Catalog { get; set; } = default!;
+    [Parameter] public int CountdownSeconds { get; set; } = 5;
+
+    private IReadOnlyList<EscapeRolled> Rolls => [.. Game.LastEvents.OfType<EscapeRolled>()];
+
+    private static string NameOf(GameView view, string playerId) => view.Players.First(p => p.Id == playerId).Name;
+
+    private string RollText(GameView view, EscapeRolled roll)
+    {
+        var name = NameOf(view, roll.PlayerId);
+        var monster = Catalog.Get(roll.MonsterCardId).Name;
+        if (roll.Roll == 0)
+        {
+            return $"{name} entkommt {monster} ohne Wurf";
+        }
+        return $"{name} gegen {monster}: Wurf {roll.Roll} + {roll.Bonus} – {(roll.Escaped ? "entkommen" : "erwischt")}";
+    }
+}

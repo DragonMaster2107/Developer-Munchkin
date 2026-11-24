@@ -13,6 +13,7 @@ public class StartupTests : BunitContext
     {
         Services.AddSingleton<IGameStorage>(new InMemoryGameStorage());
         Services.AddSingleton(TestGames.Catalog);
+        Services.AddSingleton<TimeProvider>(TimeProvider.System);
         Services.AddScoped<TableController>();
 
         var cut = Render<Home>();

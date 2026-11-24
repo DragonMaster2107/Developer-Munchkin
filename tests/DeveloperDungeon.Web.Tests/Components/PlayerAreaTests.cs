@@ -13,7 +13,9 @@ public class PlayerAreaTests : BunitContext
 {
     private IRenderedComponent<Table> RenderTable(TableController controller)
     {
-        Services.AddSingleton<IGameStorage>(new InMemoryGameStorage());
+        var storage = new InMemoryGameStorage();
+        Services.AddSingleton<IGameStorage>(storage);
+        Services.AddSingleton(new SettingsStore(storage));
         Services.AddSingleton(TestGames.Catalog);
         Services.AddSingleton(CardArtCatalog.Parse("{}"));
         Services.AddSingleton(controller);

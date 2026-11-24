@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using AngleSharp.Dom;
 using Bunit;
 using DeveloperDungeon.Engine.Commands;
@@ -13,7 +14,9 @@ public class TableTests : BunitContext
 {
     private IRenderedComponent<Table> RenderTable(TableController controller)
     {
-        Services.AddSingleton<IGameStorage>(new InMemoryGameStorage());
+        var storage = new InMemoryGameStorage();
+        Services.AddSingleton<IGameStorage>(storage);
+        Services.AddSingleton(new SettingsStore(storage));
         Services.AddSingleton(TestGames.Catalog);
         Services.AddSingleton(CardArtCatalog.Parse("{}"));
         Services.AddSingleton(controller);
@@ -26,7 +29,7 @@ public class TableTests : BunitContext
     [Fact]
     public void NoGame_RedirectsToStartPage()
     {
-        var controller = new TableController(TestGames.Catalog, new InMemoryGameStorage());
+        var controller = new TableController(TestGames.Catalog, new InMemoryGameStorage(), new FakeTimeProvider());
 
         RenderTable(controller);
 
