@@ -29,7 +29,9 @@ jobs:
 
       # Must happen before publish so the service worker integrity hashes match.
       - name: Set base href for GitHub Pages
-        run: sed -i 's|<base href="/" />|<base href="/Developer-Munchkin/" />|' src/DeveloperDungeon.Web/wwwroot/index.html
+        run: |
+          sed -i 's|<base href="/" />|<base href="/Developer-Munchkin/" />|' src/DeveloperDungeon.Web/wwwroot/index.html
+          grep -q '<base href="/Developer-Munchkin/" />' src/DeveloperDungeon.Web/wwwroot/index.html
 
       - name: Publish
         run: dotnet publish src/DeveloperDungeon.Web -c Release -o publish

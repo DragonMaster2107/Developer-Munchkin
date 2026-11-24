@@ -7,7 +7,7 @@
         @switch (Kind)
         {
             case TargetKind.Side:
-                <button type="button" class="dd-button" @onclick="() => Pick(new ActionTarget(Side: Side.Player))">Für mich</button>
+                <button type="button" class="dd-button" @onclick="() => Pick(new ActionTarget(Side: Side.Player))">Für die Spieler</button>
                 <button type="button" class="dd-button" @onclick="() => Pick(new ActionTarget(Side: Side.Monster))">Für das Monster</button>
                 break;
             case TargetKind.Player:

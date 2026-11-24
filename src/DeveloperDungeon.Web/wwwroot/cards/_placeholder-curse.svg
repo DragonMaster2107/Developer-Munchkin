@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130" style="background:#534ab7">
-<style>@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}</style>
+<style>@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
 <rect x="0" y="108" width="200" height="22" fill="#3b3485"/>
 <rect x="38" y="96" width="124" height="12" rx="4" fill="#22223b"/>
 <g style="animation:bob 2.2s ease-in-out infinite">

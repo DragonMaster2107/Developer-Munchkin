@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130" style="background:#dfe7fd">
-<style>@keyframes flutter{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(3deg)}}@keyframes tick{0%,100%{opacity:.3}50%{opacity:1}}</style>
+<style>@keyframes flutter{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(3deg)}}@keyframes tick{0%,100%{opacity:.3}50%{opacity:1}}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
 <rect x="0" y="108" width="200" height="22" fill="#b8c4e8"/>
 <g style="transform-origin:100px 108px;animation:flutter 3s ease-in-out infinite">
 <path d="M52 24 H148 V50 a8 8 0 0 0 0 16 V100 H52 V66 a8 8 0 0 0 0 -16 Z" fill="#fff" stroke="#2b2d42" stroke-width="3"/>

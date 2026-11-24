@@ -4,7 +4,7 @@
 @keyframes wisp{0%{transform:translate(0,0);opacity:.9}100%{transform:translate(4px,-18px);opacity:0}}
 @keyframes fly{0%{transform:rotate(0deg) translateX(26px) rotate(0deg)}100%{transform:rotate(360deg) translateX(26px) rotate(-360deg)}}
 @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
-@keyframes wiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-12deg)}95%{transform:rotate(12deg)}}</style>
+@keyframes wiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-12deg)}95%{transform:rotate(12deg)}}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
 <rect x="0" y="104" width="200" height="26" fill="#d4b896"/>
 <g style="transform-origin:100px 60px;animation:fly 3s linear infinite">
 <circle cx="100" cy="60" r="3" fill="#333"/><ellipse cx="98" cy="57" rx="3" ry="2" fill="#bbb"/><ellipse cx="102" cy="57" rx="3" ry="2" fill="#bbb"/>

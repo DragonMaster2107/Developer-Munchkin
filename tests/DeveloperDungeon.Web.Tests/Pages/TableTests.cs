@@ -3,6 +3,7 @@ using Microsoft.Extensions.Time.Testing;
 using AngleSharp.Dom;
 using Bunit;
 using DeveloperDungeon.Engine.Commands;
+using DeveloperDungeon.Web.Components;
 using DeveloperDungeon.Web.Logic;
 using DeveloperDungeon.Web.Pages;
 using DeveloperDungeon.Web.Tests.Support;
@@ -21,7 +22,7 @@ public class TableTests : BunitContext
         Services.AddSingleton(new SettingsStore(storage));
         Services.AddSingleton(TestGames.Catalog);
         Services.AddSingleton(CardArtCatalog.Parse("{}"));
-        Services.TryAddSingleton<TimeProvider>(TimeProvider.System);
+        Services.TryAddSingleton<TimeProvider>(_time);
         Services.AddSingleton(controller);
         return Render<Table>();
     }
@@ -30,6 +31,15 @@ public class TableTests : BunitContext
         cut.FindAll("button").Single(b => b.TextContent.Trim() == text);
 
     private NavigationManager Nav => Services.GetRequiredService<NavigationManager>();
+
+    private readonly FakeTimeProvider _time = new();
+
+    /// <summary>Wartet die Klicksperre des Übergabe-Bildschirms ab und deckt auf.</summary>
+    private void Reveal(IRenderedComponent<Table> cut)
+    {
+        _time.Advance(HandoffScreen.RevealGuard);
+        cut.FindAll("button").Single(b => b.TextContent.Contains("aufdecken")).Click();
+    }
 
     [Fact]
     public void NoGame_NoSave_RedirectsToStartPageInsideApp()
@@ -66,7 +76,7 @@ public class TableTests : BunitContext
         Assert.Contains($"Gib das Gerät an {first}", cut.Markup);
         Assert.Empty(cut.FindAll(".hand-area"));
 
-        cut.FindAll("button").Single(b => b.TextContent.Contains("aufdecken")).Click();
+        Reveal(cut);
 
         Assert.NotEmpty(cut.FindAll(".hand-area"));
         Assert.DoesNotContain("Gib das Gerät an", cut.Markup);
@@ -80,14 +90,14 @@ public class TableTests : BunitContext
 
         for (var i = 0; i < 3; i++)
         {
-            cut.FindAll("button").Single(b => b.TextContent.Contains("aufdecken")).Click();
+            Reveal(cut);
             Assert.Contains("Aufbau-Runde:", cut.Markup);
             Assert.DoesNotContain("Ticket öffnen", cut.Markup);
             Button(cut, "Fertig").Click();
         }
 
         cut.WaitForAssertion(() => Assert.Contains("aufdecken", cut.Markup));
-        cut.FindAll("button").Single(b => b.TextContent.Contains("aufdecken")).Click();
+        Reveal(cut);
 
         Assert.NotNull(Button(cut, "Ticket öffnen"));
         Assert.DoesNotContain("Aufbau-Runde:", cut.Markup);

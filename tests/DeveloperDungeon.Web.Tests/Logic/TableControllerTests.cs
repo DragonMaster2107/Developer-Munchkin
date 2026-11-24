@@ -305,6 +305,30 @@ public class TableControllerTests
         Assert.Null(c.RevealedPlayerId);
     }
 
+    [Fact]
+    public async Task StartNewGame_AfterReveal_HidesHandUntilHandoffConfirmed()
+    {
+        var storage = new BlockingStorage();
+        var c = TestGames.NewController(3, 42, storage);
+        c.ConfirmHandoff();
+        Assert.NotNull(c.View.MyHand);
+        storage.Block = new TaskCompletionSource();
+
+        var pending = c.StartNewGameAsync(TestGames.Setups(3), 7);
+
+        Assert.False(pending.IsCompleted);
+        Assert.Null(c.RevealedPlayerId);
+        Assert.Null(c.View.MyHand);
+
+        storage.Block.SetResult();
+        await pending;
+        Assert.Null(c.View.MyHand);
+        Assert.Equal(c.SetupPlayerId, c.HandoffTargetId);
+
+        c.ConfirmHandoff();
+        Assert.NotNull(c.View.MyHand);
+    }
+
     private sealed class BlockingStorage : IGameStorage
     {
         public TaskCompletionSource? Block { get; set; }

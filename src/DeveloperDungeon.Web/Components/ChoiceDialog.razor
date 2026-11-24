@@ -11,7 +11,7 @@
         <div class="choice-dialog dd-panel" role="dialog" aria-modal="true" aria-label="Auswahl">
             <h3>@Heading(choice, owner)</h3>
             <div class="choice-cards">
-                @foreach (var card in owner.Equipped)
+                @foreach (var card in Options(choice, owner))
                 {
                     <div class="choice-card" @key="card.InstanceId" data-instance="@card.InstanceId">
                         <CardView Card="Catalog.Get(card.CardId)" Size="CardSize.Small"
@@ -26,6 +26,12 @@
 @code {
     [Parameter, EditorRequired] public GameView View { get; set; } = default!;
     [Parameter, EditorRequired] public CardCatalog Catalog { get; set; } = default!;
+
+    /// <summary>Wählbare Karten: beim Abwerfen eines kleinen Items nur angelegte Ausrüstung ohne Slot.</summary>
+    private IEnumerable<CardInstance> Options(PendingChoice choice, PublicPlayerView owner) =>
+        choice.Kind == ChoiceKind.DiscardSmallItem
+            ? owner.Equipped.Where(c => Catalog.Get(c.CardId) is { Kind: CardKind.Equipment, Slot: Slot.None })
+            : owner.Equipped;
 
     private string Heading(PendingChoice choice, PublicPlayerView owner) => choice.Kind switch
     {

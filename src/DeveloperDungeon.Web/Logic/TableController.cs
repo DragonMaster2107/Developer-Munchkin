@@ -254,8 +254,12 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage, T
         _playerCount = game.GetView(null).Players.Count;
         _pendingJson = game.Save();
         _countdown?.Cancel();
+        // Nichts aus der vorigen Partie darf in die erste Sicht der neuen durchsickern (aufgedeckte Hand, Übergabe, Eingreifen, Aufbau-Runde).
+        RevealedPlayerId = null;
+        HandoffTargetId = null;
         InterjectorId = null;
         SetupPlayerId = null;
+        _setupDone = 0;
         LastEvents = [];
         LastRejection = null;
         LastWarning = null;

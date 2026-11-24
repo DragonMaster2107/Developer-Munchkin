@@ -85,6 +85,18 @@ public class AnimationCuesTests
     }
 
     [Fact]
+    public void AutoEscape_WithoutRoll_ShowsEscaped()
+    {
+        var (c, id, _) = Setup();
+
+        var cues = AnimationCues.From([new EscapeRolled(id, FirstCardOf(CardKind.Monster), 0, 0, true)], c.View, Catalog);
+
+        var cue = Assert.Single(cues);
+        Assert.Equal(CueKind.EscapeSuccess, cue.Kind);
+        Assert.Equal("Entkommen", cue.Text);
+    }
+
+    [Fact]
     public void AllDurations_AtMost1500()
     {
         var (c, id, _) = Setup();

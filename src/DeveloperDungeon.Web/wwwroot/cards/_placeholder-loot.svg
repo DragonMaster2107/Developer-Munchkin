@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130" style="background:#f2cc8f">
-<style>@keyframes lid{0%,70%,100%{transform:rotate(0)}80%{transform:rotate(-8deg)}90%{transform:rotate(0)}}@keyframes sparkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}</style>
+<style>@keyframes lid{0%,70%,100%{transform:rotate(0)}80%{transform:rotate(-8deg)}90%{transform:rotate(0)}}@keyframes sparkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
 <rect x="0" y="104" width="200" height="26" fill="#d4b896"/>
 <rect x="52" y="64" width="96" height="42" rx="4" fill="#8a5a2b" stroke="#2b2d42" stroke-width="3"/>
 <g style="transform-origin:52px 64px;animation:lid 2.6s ease-in-out infinite"><path d="M52 64 Q52 34 100 34 Q148 34 148 64 Z" fill="#a8703a" stroke="#2b2d42" stroke-width="3"/></g>

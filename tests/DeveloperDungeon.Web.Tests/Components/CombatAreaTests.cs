@@ -60,6 +60,8 @@ public class CombatAreaTests : BunitContext
         var helper = OtherPlayer(c);
         c.BeginInterjection(helper);
         c.ConfirmHandoff();
+        var time = new FakeTimeProvider();
+        Services.AddSingleton<TimeProvider>(time);
         var cut = RenderTable(c);
 
         cut.Find(".help-panel input").Change("1");
@@ -68,6 +70,7 @@ public class CombatAreaTests : BunitContext
         Assert.Contains(c.View.Combat!.State.Offers, o => o.PlayerId == helper && o.LootShare == 1);
 
         Button(cut, ".table-band", "Fertig").Click();
+        time.Advance(HandoffScreen.RevealGuard);
         cut.FindAll("button").First(b => b.TextContent.Contains("aufdecken")).Click();
         Button(cut, ".help-panel", "Annehmen").Click();
 

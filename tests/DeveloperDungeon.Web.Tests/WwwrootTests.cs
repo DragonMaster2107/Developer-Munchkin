@@ -16,4 +16,14 @@ public class WwwrootTests
 
         Assert.Contains(pattern, include);
     }
+
+    /// <summary>Konvention für Kartengrafiken: Jede SVG schaltet ihre Animationen bei reduzierter Bewegung ab.</summary>
+    [Fact]
+    public void EveryCardSvg_RespectsReducedMotion()
+    {
+        var files = Directory.GetFiles(Path.Combine(Wwwroot, "cards"), "*.svg");
+
+        Assert.NotEmpty(files);
+        Assert.All(files, file => Assert.Contains("prefers-reduced-motion", File.ReadAllText(file)));
+    }
 }

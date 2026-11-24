@@ -26,6 +26,8 @@ public static class AnimationCues
                 LevelChanged l when l.To > l.From => new(CueKind.LevelUp, $"{NameOf(l.PlayerId)}: {LevelTitles.For(l.To)}", 1500),
                 LevelChanged l when l.To < l.From => new(CueKind.LevelDown, $"{NameOf(l.PlayerId)}: Stufe {l.To}", 900),
                 CardPlayedInCombat p => new(CueKind.CardFly, catalog.Get(p.CardId).Name, 600),
+                // Wurf 0: ohne Würfeln entkommen (z. B. durch eine Fluchtkarte).
+                EscapeRolled { Roll: 0 } => new(CueKind.EscapeSuccess, "Entkommen", 800),
                 EscapeRolled r => new(r.Escaped ? CueKind.EscapeSuccess : CueKind.EscapeFail, $"Wurf {r.Roll}", 800),
                 GameWon w => new(CueKind.Victory, $"{NameOf(w.PlayerId)} ist CTO!", 1500),
                 _ => null,

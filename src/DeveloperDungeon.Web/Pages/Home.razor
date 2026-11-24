@@ -1,4 +1,5 @@
 @page "/"
+@using DeveloperDungeon.Engine.State
 @using DeveloperDungeon.Web.Logic
 @inject TableController Table
 @inject NavigationManager Nav
@@ -13,10 +14,14 @@
     {
         <p class="dd-panel home-hint" role="alert">Der gespeicherte Spielstand passt nicht mehr zu dieser Version.</p>
     }
+    @if (_warning is not null)
+    {
+        <p class="dd-panel home-hint" role="alert">@_warning</p>
+    }
     <nav class="home-menu">
         @if (_result == ResumeResult.Resumed)
         {
-            <button type="button" class="dd-button" @onclick='() => Nav.NavigateTo("spiel")'>Fortsetzen</button>
+            <button type="button" class="dd-button" @onclick='() => Nav.NavigateTo("spiel")'>@ResumeLabel</button>
         }
         <a class="dd-button" href="neu">Neues Spiel</a>
         <a class="dd-button" href="regeln">Regeln</a>
@@ -28,10 +33,23 @@
 @code {
     private bool _loaded;
     private ResumeResult _result;
+    private string? _warning;
+
+    private string ResumeLabel =>
+        Table.HasGame && Table.View.Phase == GamePhase.GameOver ? "Letzte Partie ansehen" : "Fortsetzen";
 
     protected override async Task OnInitializedAsync()
     {
-        _result = await Table.TryResumeAsync();
+        if (Table.HasGame && Table.LastWarning is not null)
+        {
+            // Der Spielstand im Speicher ist neuer als der gespeicherte: nicht neu laden, sonst ginge Fortschritt verloren.
+            _warning = Table.LastWarning;
+            _result = ResumeResult.Resumed;
+        }
+        else
+        {
+            _result = await Table.TryResumeAsync();
+        }
         _loaded = true;
     }
 }
