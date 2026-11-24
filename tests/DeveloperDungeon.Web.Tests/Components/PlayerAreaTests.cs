@@ -124,4 +124,19 @@ public class PlayerAreaTests : BunitContext
 
         Assert.Equal("true", HandCard(cut, worthless.InstanceId).GetAttribute("aria-disabled"));
     }
+
+    [Fact]
+    public async Task CardCells_CarryScopeAttribute_SoScopedCssApplies()
+    {
+        var c = await WithHandAsync(h => h.Count > 0);
+        var cut = RenderTable(c);
+
+        string? Scope(IElement e) => e.GetAttributeNames().FirstOrDefault(a => a.StartsWith("b-"));
+        var rootScope = Scope(cut.Find(".player-area"));
+
+        Assert.NotNull(rootScope);
+        Assert.NotNull(cut.Find(".hand-card").GetAttribute(rootScope));
+        Assert.NotNull(cut.Find(".slot").GetAttribute(rootScope));
+        Assert.NotNull(cut.Find(".slot-label").GetAttribute(rootScope));
+    }
 }

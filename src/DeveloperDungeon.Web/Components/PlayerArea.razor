@@ -114,49 +114,36 @@
 
     private void OnChanged() => _ = InvokeAsync(StateHasChanged);
 
-    private RenderFragment Zone(string label, IReadOnlyList<CardInstance> cards, CardLocation location) => builder =>
-    {
-        builder.OpenElement(0, "div");
-        builder.AddAttribute(1, "class", "slot");
-        builder.AddAttribute(2, "aria-label", label);
-        builder.OpenElement(3, "span");
-        builder.AddAttribute(4, "class", "slot-label");
-        builder.AddContent(5, label);
-        builder.CloseElement();
-        if (cards.Count == 0)
-        {
-            builder.OpenElement(6, "span");
-            builder.AddAttribute(7, "class", "slot-empty");
-            builder.AddContent(8, "leer");
-            builder.CloseElement();
-        }
-        foreach (var card in cards)
-        {
-            builder.AddContent(9, Cell(card, location, "zone-card"));
-        }
-        builder.CloseElement();
-    };
+    private RenderFragment Zone(string label, IReadOnlyList<CardInstance> cards, CardLocation location) =>
+        @<div class="slot" aria-label="@label">
+            <span class="slot-label">@label</span>
+            @if (cards.Count == 0)
+            {
+                <span class="slot-empty">leer</span>
+            }
+            @foreach (var card in cards)
+            {
+                @Cell(card, location, "zone-card")
+            }
+        </div>;
 
-    private RenderFragment Cell(CardInstance card, CardLocation location, string css) => builder =>
-    {
-        var def = Game.Catalog.Get(card.CardId);
-        var picked = _selling ? _sell.Contains(card.InstanceId) : SelectMode && location == CardLocation.Hand && Selected.Contains(card.InstanceId);
-        var unsellable = _selling && (def.Value <= 0 || location is CardLocation.Department or CardLocation.Language);
-        builder.OpenElement(0, "div");
-        builder.SetKey(card.InstanceId);
-        builder.AddAttribute(1, "class", $"{css}{(picked ? " selected" : "")}");
-        builder.AddAttribute(2, "data-instance", card.InstanceId);
-        builder.AddAttribute(3, "data-selected", picked.ToString().ToLowerInvariant());
-        builder.OpenComponent<CardView>(4);
-        builder.AddComponentParameter(5, nameof(CardView.Card), def);
-        builder.AddComponentParameter(6, nameof(CardView.Size), CardSize.Small);
-        builder.AddComponentParameter(7, nameof(CardView.Disabled), unsellable);
-        builder.AddComponentParameter(8, nameof(CardView.DisabledReason), unsellable ? "Kein Wert" : null);
-        builder.AddComponentParameter(9, nameof(CardView.OnClick),
-            EventCallback.Factory.Create(this, () => CardClickedAsync(card, location)));
-        builder.CloseComponent();
-        builder.CloseElement();
-    };
+    private RenderFragment Cell(CardInstance card, CardLocation location, string css) =>
+        @<div @key="card.InstanceId" class="@CellClass(card, location, css)" data-instance="@card.InstanceId"
+              data-selected="@IsPicked(card, location).ToString().ToLowerInvariant()">
+            <CardView Card="Game.Catalog.Get(card.CardId)" Size="CardSize.Small"
+                      Disabled="IsUnsellable(card, location)"
+                      DisabledReason="@(IsUnsellable(card, location) ? "Nicht verkaufbar" : null)"
+                      OnClick="@(() => CardClickedAsync(card, location))" />
+        </div>;
+
+    private bool IsPicked(CardInstance card, CardLocation location) =>
+        _selling ? _sell.Contains(card.InstanceId) : SelectMode && location == CardLocation.Hand && Selected.Contains(card.InstanceId);
+
+    private bool IsUnsellable(CardInstance card, CardLocation location) =>
+        _selling && (Game.Catalog.Get(card.CardId).Value <= 0 || location is CardLocation.Department or CardLocation.Language);
+
+    private string CellClass(CardInstance card, CardLocation location, string css) =>
+        IsPicked(card, location) ? $"{css} selected" : css;
 
     private IEnumerable<(string Label, List<CardInstance> Cards)> EquipmentSlots(PublicPlayerView me) =>
         SlotOrder.Select(s => (s.Label, me.Equipped.Where(c => Game.Catalog.Get(c.CardId).Slot == s.Slot).ToList()));
