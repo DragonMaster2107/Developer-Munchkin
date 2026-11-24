@@ -118,6 +118,21 @@ public class TableControllerTests
         Assert.Null(c.LastWarning);
     }
 
+
+    [Fact]
+    public async Task IdenticalRejectionTwice_AdvancesFeedbackVersionEachTime()
+    {
+        var c = await TestGames.StartedAsync();
+        c.ConfirmHandoff();
+        var bad = new WorkBacklog(c.View.ActivePlayerId);
+
+        await c.SendAsync(bad);
+        var first = c.FeedbackVersion;
+        await c.SendAsync(bad);
+
+        Assert.Equal(first + 1, c.FeedbackVersion);
+        Assert.Equal(c.LastRejection, c.Feedback);
+    }
     [Fact]
     public async Task TurnEnded_HidesHandAndRequestsNextPlayer()
     {

@@ -140,6 +140,50 @@ public class TableTests : BunitContext
         Assert.NotEqual(active, c.View.ActivePlayerId);
     }
 
+
+    [Fact]
+    public async Task EndTurn_SelectionDropsCardsThatLeftTheHand()
+    {
+        var c = await TestGames.AtEndTurnAsync(new InMemoryGameStorage());
+        var active = c.View.ActivePlayerId;
+        await HandSizing.SetHandSizeAsync(c, 7);
+        var cut = RenderTable(c);
+        var firstId = c.View.MyHand![0].InstanceId;
+
+        cut.FindAll(".hand-card .card")[0].Click();
+        cut.FindAll(".hand-card .card")[1].Click();
+        Assert.False(Button(cut, "Feierabend").HasAttribute("disabled"));
+
+        // Eine gewählte Karte verschwindet per Werkzeugkasten, die Hand hat danach 6 Karten, also ist 1 abzugeben.
+        await cut.InvokeAsync(() => c.SendAsync(new ManualDiscard(active, firstId)));
+
+        cut.WaitForAssertion(() => Assert.Contains("Wähle 1 Karten zum Abgeben", cut.Markup));
+        Assert.Single(cut.FindAll(".hand-card.selected"));
+        Assert.False(Button(cut, "Feierabend").HasAttribute("disabled"));
+
+        // Auf 7 aufgefüllt braucht es wieder 2 gültige Karten; nur eine ist noch gewählt.
+        await cut.InvokeAsync(() => HandSizing.SetHandSizeAsync(c, 7));
+        cut.WaitForAssertion(() => Assert.Contains("Wähle 2 Karten zum Abgeben", cut.Markup));
+        Assert.Single(cut.FindAll(".hand-card.selected"));
+        Assert.True(Button(cut, "Feierabend").HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public async Task RejectedCommand_Twice_ShowsToastAgainAndAdvancesFeedbackVersion()
+    {
+        var c = await TestGames.StartedAsync();
+        c.ConfirmHandoff();
+        var cut = RenderTable(c);
+        var bad = new WorkBacklog(c.View.ActivePlayerId);
+
+        await cut.InvokeAsync(() => c.SendAsync(bad));
+        var version = c.FeedbackVersion;
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".toast")));
+        await cut.InvokeAsync(() => c.SendAsync(bad));
+
+        Assert.Equal(version + 1, c.FeedbackVersion);
+        Assert.Contains(c.LastRejection!, cut.Find(".toast").TextContent);
+    }
     [Fact]
     public async Task Winner_ShowsVictoryScreen()
     {

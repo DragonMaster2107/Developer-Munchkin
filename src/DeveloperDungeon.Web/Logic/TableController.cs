@@ -38,6 +38,10 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
     public string? LastRejection { get; private set; }
     public string? LastWarning { get; private set; }
 
+    /// <summary>Zählt jede neue Rückmeldung (abgelehnter Befehl, Speicherwarnung) hoch, auch bei gleichem Text.</summary>
+    public int FeedbackVersion { get; private set; }
+    public string? Feedback { get; private set; }
+
     public event Action? Changed;
 
     public async Task StartNewGameAsync(IReadOnlyList<PlayerSetup> players, ulong seed)
@@ -178,6 +182,7 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
         else
         {
             LastRejection = result.Rejection;
+            Notify(result.Rejection);
         }
 
         Changed?.Invoke();
@@ -214,6 +219,12 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
         return players[(start + offset) % players.Count].Id;
     }
 
+    private void Notify(string? message)
+    {
+        Feedback = message;
+        FeedbackVersion++;
+    }
+
     private void Refresh() => _view = _session?.GetView(RevealedPlayerId);
 
     private async Task PersistAsync(string json)
@@ -226,6 +237,7 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage)
         catch (Exception)
         {
             LastWarning = SaveFailedWarning;
+            Notify(SaveFailedWarning);
         }
     }
 }

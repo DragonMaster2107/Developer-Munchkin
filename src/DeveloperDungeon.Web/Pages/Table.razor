@@ -13,6 +13,7 @@
 @if (Game.HasGame)
 {
     var view = Game.View;
+    ReconcileSelection(view);
     @if (view.WinnerId is { } winnerId)
     {
         <div class="victory" role="dialog" aria-modal="true" aria-label="Sieg">
@@ -86,6 +87,18 @@
 @code {
     private readonly HashSet<int> _selected = [];
     private CardDefinition? _zoom;
+    private string? _selectedFor;
+
+    /// <summary>Gleicht die Auswahl mit der aktuell aufgedeckten Hand ab: fremde oder verschwundene Karten fallen heraus.</summary>
+    private void ReconcileSelection(DeveloperDungeon.Engine.Views.GameView view)
+    {
+        if (_selectedFor != Game.RevealedPlayerId)
+        {
+            _selected.Clear();
+            _selectedFor = Game.RevealedPlayerId;
+        }
+        _selected.IntersectWith((view.MyHand ?? []).Select(c => c.InstanceId));
+    }
 
     protected override void OnInitialized()
     {
