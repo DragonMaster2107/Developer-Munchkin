@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/DeveloperDungeon.Engine/DeveloperDungeon.Engine.csproj" />
+    <Project Path="src/DeveloperDungeon.Web/DeveloperDungeon.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DeveloperDungeon.Engine.Tests/DeveloperDungeon.Engine.Tests.csproj" />
+    <Project Path="tests/DeveloperDungeon.Web.Tests/DeveloperDungeon.Web.Tests.csproj" />
   </Folder>
 </Solution>
