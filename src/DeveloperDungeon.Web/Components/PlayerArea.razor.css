@@ -1,0 +1,32 @@
+.player-area { display: flex; flex-direction: column; gap: var(--dd-space-2); }
+
+.area-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--dd-space-3); }
+.area-head h2, .hand-title { margin: 0; font-size: 1.1rem; }
+
+.zones { display: flex; flex-wrap: wrap; gap: var(--dd-space-2); }
+
+.slot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-1);
+    min-width: 5rem;
+}
+
+.slot-label { font-size: 0.8rem; font-weight: 700; }
+.slot-empty { font-size: 0.8rem; opacity: 0.6; }
+
+.hand-cards {
+    display: flex;
+    gap: var(--dd-space-2);
+    overflow-x: auto;
+    padding: var(--dd-space-1);
+    -webkit-overflow-scrolling: touch;
+}
+
+.hand-card, .zone-card { flex: 0 0 auto; }
+
+.hand-card.selected, .zone-card.selected {
+    outline: 4px solid var(--dd-curse);
+    outline-offset: 2px;
+    border-radius: var(--dd-radius);
+}

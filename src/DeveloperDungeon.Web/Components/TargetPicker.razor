@@ -1,0 +1,53 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Web.Logic
+
+<div class="picker-overlay" @onclick="OnCancel">
+    <div class="target-picker dd-panel" role="dialog" aria-modal="true" aria-label="Ziel wählen" @onclick:stopPropagation="true">
+        <h3>@Heading</h3>
+        @switch (Kind)
+        {
+            case TargetKind.Side:
+                <button type="button" class="dd-button" @onclick="() => Pick(new ActionTarget(Side: Side.Player))">Für mich</button>
+                <button type="button" class="dd-button" @onclick="() => Pick(new ActionTarget(Side: Side.Monster))">Für das Monster</button>
+                break;
+            case TargetKind.Player:
+                @foreach (var p in Players)
+                {
+                    <button type="button" class="dd-button" @onclick="() => Pick(new ActionTarget(PlayerId: p.Id))">@p.Name</button>
+                }
+                break;
+            default:
+                @foreach (var m in Monsters)
+                {
+                    <button type="button" class="dd-button" @onclick="() => Pick(new ActionTarget(MonsterInstanceId: m.Id))">@m.Name</button>
+                }
+                @if (Monsters.Count == 0)
+                {
+                    <p class="picker-empty">@(Kind == TargetKind.MonsterFromHand ? "Du hast kein Monster auf der Hand." : "Gerade ist kein Monster im Kampf.")</p>
+                }
+                break;
+        }
+        <button type="button" class="dd-button picker-cancel" @onclick="OnCancel">Abbrechen</button>
+    </div>
+</div>
+
+@code {
+    public sealed record PlayerChoice(string Id, string Name);
+    public sealed record MonsterChoice(int Id, string Name);
+
+    [Parameter, EditorRequired] public TargetKind Kind { get; set; }
+    [Parameter] public IReadOnlyList<PlayerChoice> Players { get; set; } = [];
+    [Parameter] public IReadOnlyList<MonsterChoice> Monsters { get; set; } = [];
+    [Parameter] public EventCallback<ActionTarget> OnPick { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private string Heading => Kind switch
+    {
+        TargetKind.Player => "Wen willst du verfluchen?",
+        TargetKind.Side => "Für wen spielst du die Karte?",
+        TargetKind.Monster => "Auf welches Monster?",
+        _ => "Welches Monster aus deiner Hand?",
+    };
+
+    private Task Pick(ActionTarget target) => OnPick.InvokeAsync(target);
+}

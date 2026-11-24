@@ -57,20 +57,8 @@
                 </section>
             </div>
 
-            <section class="hand-area dd-panel" aria-label="Hand">
-                <h2>Hand</h2>
-                <div class="hand-cards">
-                    @foreach (var card in view.MyHand ?? [])
-                    {
-                        var id = card.InstanceId;
-                        var selected = _selected.Contains(id);
-                        var click = giveAway > 0 ? EventCallback.Factory.Create(this, () => ToggleSelected(id)) : default;
-                        <div class="hand-card @(selected ? "selected" : "")" data-selected="@selected.ToString().ToLowerInvariant()">
-                            <CardView Card="Game.Catalog.Get(card.CardId)" Size="CardSize.Small"
-                                      OnClick="click" />
-                        </div>
-                    }
-                </div>
+            <section class="hand-area dd-panel">
+                <PlayerArea SelectMode="@(giveAway > 0)" Selected="_selected" OnToggle="ToggleSelected" />
                 <ActionBar View="view" ActorId="@actorId" Selected="_selected" OnCommand="SendCommand" />
             </section>
 

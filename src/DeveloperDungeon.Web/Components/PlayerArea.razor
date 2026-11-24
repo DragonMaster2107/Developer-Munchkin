@@ -1,0 +1,289 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.State
+@using DeveloperDungeon.Engine.Views
+@using DeveloperDungeon.Web.Logic
+@implements IDisposable
+@inject TableController Game
+
+@if (Game.RevealedPlayerId is { } playerId && Game.View.Players.FirstOrDefault(p => p.Id == playerId) is { } me)
+{
+    <section class="player-area" aria-label="Mein Bereich">
+        <div class="area-head">
+            <h2>@me.Name</h2>
+            @if (_selling)
+            {
+                <SellPanel Credits="SellCredits" Count="_sell.Count" OnConfirm="ConfirmSellAsync" OnCancel="CancelSell" />
+            }
+            else if (!SelectMode)
+            {
+                <button type="button" class="dd-button" @onclick="StartSell">Verkaufen</button>
+            }
+        </div>
+
+        <div class="zones">
+            @foreach (var (label, cards) in EquipmentSlots(me))
+            {
+                <div class="slot" aria-label="@label">
+                    <span class="slot-label">@label</span>
+                    @if (cards.Count == 0)
+                    {
+                        <span class="slot-empty">leer</span>
+                    }
+                    @foreach (var card in cards)
+                    {
+                        @Cell(card, CardLocation.Equipped, "zone-card")
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="zones">
+            @Zone("Rucksack", me.Backpack, CardLocation.Backpack)
+            @Zone("Abteilungen", me.Departments, CardLocation.Department)
+            @Zone("Sprachen", me.Languages, CardLocation.Language)
+        </div>
+
+        <h3 class="hand-title">Hand</h3>
+        <div class="hand-cards">
+            @foreach (var card in Game.View.MyHand ?? [])
+            {
+                @Cell(card, CardLocation.Hand, "hand-card")
+            }
+        </div>
+    </section>
+}
+
+@if (_menu is { } menu)
+{
+    <CardActionMenu Title="@Game.Catalog.Get(menu.Card.CardId).Name" Actions="menu.Actions" Reasons="_reasons"
+                    OnChoose="ChooseAsync" OnZoom="ZoomMenuCard" OnClose="CloseMenu" />
+}
+
+@if (_pending is { } pending)
+{
+    <TargetPicker Kind="pending.Target" Players="PlayerChoices()" Monsters="MonsterChoices(pending.Target)"
+                  OnPick="PickTargetAsync" OnCancel="CloseMenu" />
+}
+
+<CardZoom Card="_zoom" OnClose="() => _zoom = null" />
+
+@code {
+    private sealed record OpenMenu(CardInstance Card, IReadOnlyList<CardAction> Actions);
+    private sealed record PendingTarget(CardAction Action)
+    {
+        public TargetKind Target => Action.Target;
+    }
+
+    private static readonly (string Label, Slot Slot)[] SlotOrder =
+    [
+        ("Kopf", Slot.Head), ("Körper", Slot.Body), ("Füße", Slot.Feet),
+        ("Hände", Slot.Hands), ("Groß", Slot.Big), ("Klein", Slot.None),
+    ];
+
+    private readonly HashSet<int> _sell = [];
+    private Dictionary<string, string?> _reasons = [];
+    private OpenMenu? _menu;
+    private PendingTarget? _pending;
+    private CardDefinition? _zoom;
+    private bool _selling;
+    private string? _for;
+
+    /// <summary>Abgabe-Auswahl (Feierabend): Antippen markiert Karten statt das Menü zu öffnen.</summary>
+    [Parameter] public bool SelectMode { get; set; }
+    [Parameter] public IReadOnlyCollection<int> Selected { get; set; } = [];
+    [Parameter] public EventCallback<int> OnToggle { get; set; }
+
+    private int SellCredits => _sell.Sum(id => CardOf(id) is { } c ? Game.Catalog.Get(c.CardId).Value : 0);
+
+    protected override void OnInitialized() => Game.Changed += OnChanged;
+
+    protected override void OnParametersSet()
+    {
+        if (_for != Game.RevealedPlayerId)
+        {
+            _for = Game.RevealedPlayerId;
+            CancelSell();
+            CloseMenu();
+        }
+        if (SelectMode)
+        {
+            CancelSell();
+        }
+    }
+
+    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private RenderFragment Zone(string label, IReadOnlyList<CardInstance> cards, CardLocation location) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "slot");
+        builder.AddAttribute(2, "aria-label", label);
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "slot-label");
+        builder.AddContent(5, label);
+        builder.CloseElement();
+        if (cards.Count == 0)
+        {
+            builder.OpenElement(6, "span");
+            builder.AddAttribute(7, "class", "slot-empty");
+            builder.AddContent(8, "leer");
+            builder.CloseElement();
+        }
+        foreach (var card in cards)
+        {
+            builder.AddContent(9, Cell(card, location, "zone-card"));
+        }
+        builder.CloseElement();
+    };
+
+    private RenderFragment Cell(CardInstance card, CardLocation location, string css) => builder =>
+    {
+        var def = Game.Catalog.Get(card.CardId);
+        var picked = _selling ? _sell.Contains(card.InstanceId) : SelectMode && location == CardLocation.Hand && Selected.Contains(card.InstanceId);
+        var unsellable = _selling && (def.Value <= 0 || location is CardLocation.Department or CardLocation.Language);
+        builder.OpenElement(0, "div");
+        builder.SetKey(card.InstanceId);
+        builder.AddAttribute(1, "class", $"{css}{(picked ? " selected" : "")}");
+        builder.AddAttribute(2, "data-instance", card.InstanceId);
+        builder.AddAttribute(3, "data-selected", picked.ToString().ToLowerInvariant());
+        builder.OpenComponent<CardView>(4);
+        builder.AddComponentParameter(5, nameof(CardView.Card), def);
+        builder.AddComponentParameter(6, nameof(CardView.Size), CardSize.Small);
+        builder.AddComponentParameter(7, nameof(CardView.Disabled), unsellable);
+        builder.AddComponentParameter(8, nameof(CardView.DisabledReason), unsellable ? "Kein Wert" : null);
+        builder.AddComponentParameter(9, nameof(CardView.OnClick),
+            EventCallback.Factory.Create(this, () => CardClickedAsync(card, location)));
+        builder.CloseComponent();
+        builder.CloseElement();
+    };
+
+    private IEnumerable<(string Label, List<CardInstance> Cards)> EquipmentSlots(PublicPlayerView me) =>
+        SlotOrder.Select(s => (s.Label, me.Equipped.Where(c => Game.Catalog.Get(c.CardId).Slot == s.Slot).ToList()));
+
+    private CardInstance? CardOf(int id)
+    {
+        var me = Game.View.Players.First(p => p.Id == Game.RevealedPlayerId);
+        return (Game.View.MyHand ?? []).Concat(me.Equipped).Concat(me.Backpack).FirstOrDefault(c => c.InstanceId == id);
+    }
+
+    private async Task CardClickedAsync(CardInstance card, CardLocation location)
+    {
+        if (_selling)
+        {
+            if (!_sell.Remove(card.InstanceId))
+            {
+                _sell.Add(card.InstanceId);
+            }
+            return;
+        }
+        if (SelectMode)
+        {
+            if (location == CardLocation.Hand)
+            {
+                await OnToggle.InvokeAsync(card.InstanceId);
+            }
+            return;
+        }
+        await OpenMenuAsync(card, location);
+    }
+
+    private async Task OpenMenuAsync(CardInstance card, CardLocation location)
+    {
+        var def = Game.Catalog.Get(card.CardId);
+        var actions = CardActionResolver.For(def, card, location, Game.View, Game.ActorId);
+        _reasons = [];
+        _pending = null;
+        var menu = new OpenMenu(card, actions);
+        _menu = menu;
+
+        // Aktionen ohne Ziel werden beim Öffnen geprüft und bei Ablehnung ausgegraut.
+        foreach (var action in actions.Where(a => a.Target == TargetKind.None))
+        {
+            var check = await Game.CheckAsync(action.Build(new ActionTarget()));
+            if (_menu != menu)
+            {
+                return;
+            }
+            if (!check.Accepted)
+            {
+                _reasons[action.Label] = check.Rejection ?? "Gerade nicht möglich.";
+            }
+        }
+    }
+
+    private async Task ChooseAsync(CardAction action)
+    {
+        if (action.Target == TargetKind.None)
+        {
+            await SendAsync(action.Build(new ActionTarget()));
+            return;
+        }
+        _menu = null;
+        _pending = new PendingTarget(action);
+    }
+
+    private async Task PickTargetAsync(ActionTarget target)
+    {
+        if (_pending is { } pending)
+        {
+            await SendAsync(pending.Action.Build(target));
+        }
+    }
+
+    private async Task SendAsync(GameCommand command)
+    {
+        CloseMenu();
+        await Game.SendAsync(command);
+    }
+
+    private void CloseMenu()
+    {
+        _menu = null;
+        _pending = null;
+        _reasons = [];
+    }
+
+    private void ZoomMenuCard()
+    {
+        if (_menu is { } menu)
+        {
+            _zoom = Game.Catalog.Get(menu.Card.CardId);
+        }
+        CloseMenu();
+    }
+
+    private IReadOnlyList<TargetPicker.PlayerChoice> PlayerChoices() =>
+        [.. Game.View.Players.Where(p => p.Id != Game.ActorId).Select(p => new TargetPicker.PlayerChoice(p.Id, p.Name))];
+
+    private IReadOnlyList<TargetPicker.MonsterChoice> MonsterChoices(TargetKind kind)
+    {
+        var source = kind == TargetKind.MonsterFromHand
+            ? (Game.View.MyHand ?? []).Where(c => Game.Catalog.Get(c.CardId).Kind == CardKind.Monster)
+            : Game.View.Combat?.State.Monsters ?? [];
+        return [.. source.Select(c => new TargetPicker.MonsterChoice(c.InstanceId, Game.Catalog.Get(c.CardId).Name))];
+    }
+
+    private void StartSell()
+    {
+        _selling = true;
+        _sell.Clear();
+    }
+
+    private void CancelSell()
+    {
+        _selling = false;
+        _sell.Clear();
+    }
+
+    private async Task ConfirmSellAsync()
+    {
+        var result = await Game.SendAsync(new SellItems(Game.ActorId, [.. _sell]));
+        if (result.Accepted)
+        {
+            CancelSell();
+        }
+    }
+
+    public void Dispose() => Game.Changed -= OnChanged;
+}

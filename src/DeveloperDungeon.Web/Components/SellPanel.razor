@@ -1,0 +1,16 @@
+<div class="sell-panel" role="group" aria-label="Verkaufen">
+    <p class="sell-sum" aria-live="polite">@Credits Credits = @Levels @(Levels == 1 ? "Stufe" : "Stufen")</p>
+    <button type="button" class="dd-button" disabled="@(Count == 0)" @onclick="OnConfirm">Verkaufen</button>
+    <button type="button" class="dd-button" @onclick="OnCancel">Abbrechen</button>
+</div>
+
+@code {
+    public const int CreditsPerLevel = 1000;
+
+    [Parameter] public int Credits { get; set; }
+    [Parameter] public int Count { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private int Levels => Credits / CreditsPerLevel;
+}

@@ -1,0 +1,27 @@
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--dd-space-3);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.action-menu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dd-space-2);
+    width: min(92vw, 22rem);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.action-menu h3 { margin: 0; font-size: 1.1rem; }
+
+.action-row { display: flex; flex-direction: column; gap: var(--dd-space-1); }
+
+.action-reason { font-size: 0.85rem; color: var(--dd-monster); }
+
+.menu-cancel { background: var(--dd-surface); }

@@ -1,0 +1,33 @@
+@using DeveloperDungeon.Web.Logic
+
+<div class="menu-overlay" @onclick="OnClose">
+    <div class="action-menu dd-panel" role="dialog" aria-modal="true" aria-label="@Title" @onclick:stopPropagation="true">
+        <h3>@Title</h3>
+        <button type="button" class="dd-button" @onclick="OnZoom">Ansehen</button>
+        @foreach (var action in Actions)
+        {
+            var reason = Reasons.GetValueOrDefault(action.Label);
+            var blocked = reason is not null;
+            <div class="action-row">
+                <button type="button" class="dd-button" disabled="@blocked" title="@reason"
+                        @onclick="() => OnChoose.InvokeAsync(action)">@action.Label</button>
+                @if (blocked)
+                {
+                    <span class="action-reason">@reason</span>
+                }
+            </div>
+        }
+        <button type="button" class="dd-button menu-cancel" @onclick="OnClose">Schließen</button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public IReadOnlyList<CardAction> Actions { get; set; } = [];
+
+    /// <summary>Ablehnungsgrund je Aktions-Label; Aktionen mit Eintrag sind ausgegraut.</summary>
+    [Parameter] public IReadOnlyDictionary<string, string?> Reasons { get; set; } = new Dictionary<string, string?>();
+    [Parameter] public EventCallback<CardAction> OnChoose { get; set; }
+    [Parameter] public EventCallback OnZoom { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}

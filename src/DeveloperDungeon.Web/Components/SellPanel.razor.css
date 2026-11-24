@@ -1,0 +1,8 @@
+.sell-panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--dd-space-3);
+}
+
+.sell-sum { margin: 0; font-weight: 700; }

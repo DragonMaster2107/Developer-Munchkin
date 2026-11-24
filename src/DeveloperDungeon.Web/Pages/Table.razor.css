@@ -17,23 +17,9 @@
 
 .combat-area { flex: 1 1 14rem; }
 
-.combat-area h2,
-.hand-area h2 {
+.combat-area h2 {
     margin: 0;
     font-size: 1.1rem;
-}
-
-.hand-cards {
-    display: flex;
-    gap: var(--dd-space-2);
-    overflow-x: auto;
-    padding: var(--dd-space-1);
-}
-
-.hand-card.selected {
-    outline: 4px solid var(--dd-curse);
-    outline-offset: 2px;
-    border-radius: var(--dd-radius);
 }
 
 .victory {
