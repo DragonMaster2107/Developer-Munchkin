@@ -17,7 +17,13 @@
             }
             else if (!SelectMode)
             {
-                <button type="button" class="dd-button" @onclick="StartSell">Verkaufen</button>
+                <div class="sell-action">
+                    <button type="button" class="dd-button" disabled="@(_sellReason is not null)" title="@_sellReason" @onclick="StartSell">Verkaufen</button>
+                    @if (_sellReason is not null)
+                    {
+                        <span class="sell-reason">@_sellReason</span>
+                    }
+                </div>
             }
         </div>
 
@@ -81,8 +87,12 @@
         ("Hände", Slot.Hands), ("Groß", Slot.Big), ("Klein", Slot.None),
     ];
 
+    /// <summary>Ablehnung der Engine für einen Verkauf ohne Karten: Sie bedeutet nur „noch nichts gewählt“, Verkaufen ist also möglich.</summary>
+    private const string SellNeedsCardsRejection = "Wähle mindestens eine Karte, jede nur einmal.";
+
     private readonly HashSet<int> _sell = [];
     private Dictionary<string, string?> _reasons = [];
+    private string? _sellReason;
     private OpenMenu? _menu;
     private PendingTarget? _pending;
     private CardDefinition? _zoom;
@@ -98,7 +108,7 @@
 
     protected override void OnInitialized() => Game.Changed += OnChanged;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (_for != Game.RevealedPlayerId)
         {
@@ -110,9 +120,26 @@
         {
             CancelSell();
         }
+        await RefreshSellReasonAsync();
     }
 
-    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+    private void OnChanged() => _ = InvokeAsync(async () =>
+    {
+        await RefreshSellReasonAsync();
+        StateHasChanged();
+    });
+
+    /// <summary>Prüft einen leeren Verkauf: Zug- und Zeitpunkt-Ablehnungen sperren den Knopf, „keine Karte gewählt“ nicht.</summary>
+    private async Task RefreshSellReasonAsync()
+    {
+        if (!Game.HasGame || Game.RevealedPlayerId is null)
+        {
+            _sellReason = null;
+            return;
+        }
+        var check = await Game.CheckAsync(new SellItems(Game.ActorId, []));
+        _sellReason = check.Accepted || check.Rejection == SellNeedsCardsRejection ? null : check.Rejection ?? "Gerade nicht möglich.";
+    }
 
     private RenderFragment Zone(string label, IReadOnlyList<CardInstance> cards, CardLocation location) =>
         @<div class="slot" aria-label="@label">
@@ -184,10 +211,11 @@
         var menu = new OpenMenu(card, actions);
         _menu = menu;
 
-        // Aktionen ohne Ziel werden beim Öffnen geprüft und bei Ablehnung ausgegraut.
-        foreach (var action in actions.Where(a => a.Target == TargetKind.None))
+        // Alle Aktionen werden beim Öffnen geprüft (mit Ziel stellvertretend) und bei Ablehnung ausgegraut.
+        foreach (var action in actions)
         {
-            var check = await Game.CheckAsync(action.Build(new ActionTarget()));
+            var target = CardActionResolver.RepresentativeTarget(action, Game.View, Game.Catalog, Game.ActorId, card.InstanceId);
+            var check = await Game.CheckAsync(action.Build(target));
             if (_menu != menu)
             {
                 return;

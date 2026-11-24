@@ -143,4 +143,69 @@ public class PlayerAreaTests : BunitContext
         Assert.NotNull(cut.Find(".slot").GetAttribute(rootScope));
         Assert.NotNull(cut.Find(".slot-label").GetAttribute(rootScope));
     }
+
+    private static IElement SellButton(IRenderedComponent<Table> cut) =>
+        cut.FindAll(".player-area .area-head button").Single(b => b.TextContent.Trim() == "Verkaufen");
+
+    [Fact]
+    public void Curse_InSetup_IsDisabledWithReason()
+    {
+        TableController? c = null;
+        for (ulong seed = 1; seed < 500 && c is null; seed++)
+        {
+            var candidate = TestGames.NewController(3, seed);
+            candidate.ConfirmHandoff();
+            if (candidate.View.MyHand!.Any(x => Def(x.CardId).Kind == CardKind.Curse))
+            {
+                c = candidate;
+            }
+        }
+        Assert.NotNull(c);
+        var curse = c.View.MyHand!.First(x => Def(x.CardId).Kind == CardKind.Curse);
+        var cut = RenderTable(c);
+
+        HandCard(cut, curse.InstanceId).Click();
+
+        cut.WaitForAssertion(() => Assert.True(Button(cut, ".action-menu", "Verfluchen …").HasAttribute("disabled")));
+        Assert.Contains("Im Aufbau kann man keine Flüche ausspielen.", cut.Find(".action-menu").TextContent);
+    }
+
+    [Fact]
+    public async Task ColdCoffee_OutsideCombat_IsDisabledWithReason()
+    {
+        var c = await WithHandAsync(h => h.Any(d => d.Id == "oneshot-cold-coffee"));
+        var coffee = c.View.MyHand!.First(x => x.CardId == "oneshot-cold-coffee");
+        var cut = RenderTable(c);
+
+        HandCard(cut, coffee.InstanceId).Click();
+
+        cut.WaitForAssertion(() => Assert.True(Button(cut, ".action-menu", "Ausspielen …").HasAttribute("disabled")));
+        Assert.Contains("Diese Karte kann man nur im laufenden Kampf ausspielen.", cut.Find(".action-menu").TextContent);
+    }
+
+    [Fact]
+    public async Task Sell_InOtherPlayersTurn_IsDisabledWithReason()
+    {
+        var c = await TestGames.StartedAsync();
+        c.ConfirmHandoff();
+        c.BeginInterjection(c.View.Players.First(p => p.Id != c.View.ActivePlayerId).Id);
+        c.ConfirmHandoff();
+        var cut = RenderTable(c);
+
+        const string reason = "Verkaufen kannst du nur in deinem Zug außerhalb eines Kampfs.";
+        cut.WaitForAssertion(() => Assert.True(SellButton(cut).HasAttribute("disabled")));
+        Assert.Equal(reason, SellButton(cut).GetAttribute("title"));
+        Assert.Contains(reason, cut.Find(".player-area .area-head").TextContent);
+    }
+
+    [Fact]
+    public async Task Sell_InOwnTurnOutsideCombat_IsEnabled()
+    {
+        var c = await TestGames.StartedAsync();
+        c.ConfirmHandoff();
+        var cut = RenderTable(c);
+
+        cut.WaitForAssertion(() => Assert.False(SellButton(cut).HasAttribute("disabled")));
+        Assert.Null(SellButton(cut).GetAttribute("title"));
+    }
 }

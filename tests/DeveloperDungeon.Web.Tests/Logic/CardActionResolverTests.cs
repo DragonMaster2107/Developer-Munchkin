@@ -1,5 +1,6 @@
 using DeveloperDungeon.Engine.Cards;
 using DeveloperDungeon.Engine.Commands;
+using DeveloperDungeon.Engine.Rules;
 using DeveloperDungeon.Engine.State;
 using DeveloperDungeon.Engine.Views;
 using DeveloperDungeon.Web.Logic;
@@ -169,5 +170,69 @@ public class CardActionResolverTests
     public void DepartmentAndLanguageZones_OfferOnlyDiscard(CardLocation location)
     {
         Assert.Equal(["Abwerfen"], Labels(Resolve(Def("dept-qa"), location)));
+    }
+
+    private static CardAction Action(TargetKind kind) => new("x", kind, _ => new EndTurn(Actor, []));
+
+    private static CardInstance Inst(int id, string cardId) => new() { InstanceId = id, CardId = cardId };
+
+    [Fact]
+    public void RepresentativeTarget_None_IsEmpty()
+    {
+        Assert.Equal(new ActionTarget(), CardActionResolver.RepresentativeTarget(Action(TargetKind.None), BaseView, TestGames.Catalog, Actor, 7));
+    }
+
+    [Fact]
+    public void RepresentativeTarget_Player_IsFirstOtherPlayer()
+    {
+        var other = BaseView.Players.First(p => p.Id != Actor).Id;
+
+        var target = CardActionResolver.RepresentativeTarget(Action(TargetKind.Player), BaseView, TestGames.Catalog, Actor, 7);
+
+        Assert.Equal(new ActionTarget(PlayerId: other), target);
+    }
+
+    [Fact]
+    public void RepresentativeTarget_Side_IsPlayerSide()
+    {
+        Assert.Equal(new ActionTarget(Side: Side.Player),
+            CardActionResolver.RepresentativeTarget(Action(TargetKind.Side), BaseView, TestGames.Catalog, Actor, 7));
+    }
+
+    [Fact]
+    public void RepresentativeTarget_Monster_IsFirstMonsterInCombat()
+    {
+        var combat = new CombatState { Monsters = [Inst(31, "monster-impatient-po"), Inst(32, "monster-legacy-2012")] };
+        var view = BaseView with { Combat = new CombatView(combat, new CombatSummary(1, 2, false, false, 1, 1)) };
+
+        var target = CardActionResolver.RepresentativeTarget(Action(TargetKind.Monster), view, TestGames.Catalog, Actor, 7);
+
+        Assert.Equal(new ActionTarget(MonsterInstanceId: 31), target);
+    }
+
+    [Fact]
+    public void RepresentativeTarget_Monster_WithoutCombat_UsesDummyId()
+    {
+        Assert.Equal(new ActionTarget(MonsterInstanceId: 0),
+            CardActionResolver.RepresentativeTarget(Action(TargetKind.Monster), BaseView with { Combat = null }, TestGames.Catalog, Actor, 7));
+    }
+
+    [Fact]
+    public void RepresentativeTarget_MonsterFromHand_IsFirstOtherMonsterInHand()
+    {
+        var view = BaseView with { MyHand = [Inst(7, "monster-impatient-po"), Inst(8, "equip-rider"), Inst(9, "monster-legacy-2012")] };
+
+        var target = CardActionResolver.RepresentativeTarget(Action(TargetKind.MonsterFromHand), view, TestGames.Catalog, Actor, 7);
+
+        Assert.Equal(new ActionTarget(MonsterInstanceId: 9), target);
+    }
+
+    [Fact]
+    public void RepresentativeTarget_MonsterFromHand_WithoutMonster_UsesDummyId()
+    {
+        var view = BaseView with { MyHand = [Inst(7, "special-wandering-bug"), Inst(8, "equip-rider")] };
+
+        Assert.Equal(new ActionTarget(MonsterInstanceId: 0),
+            CardActionResolver.RepresentativeTarget(Action(TargetKind.MonsterFromHand), view, TestGames.Catalog, Actor, 7));
     }
 }

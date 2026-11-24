@@ -91,6 +91,19 @@ public static class CardActionResolver
         }
     }
 
+    /// <summary>Ein stellvertretendes Ziel, mit dem eine Aktion beim Öffnen des Menüs vorab geprüft wird.
+    /// Fehlt ein echtes Ziel, steht die Monster-ID 0; die Engine lehnt dann mit dem passenden Grund ab.</summary>
+    public static ActionTarget RepresentativeTarget(CardAction action, GameView view, CardCatalog catalog, string actorId, int playedInstanceId) =>
+        action.Target switch
+        {
+            TargetKind.Player => new ActionTarget(PlayerId: view.Players.FirstOrDefault(p => p.Id != actorId)?.Id),
+            TargetKind.Side => new ActionTarget(Side: Side.Player),
+            TargetKind.Monster => new ActionTarget(MonsterInstanceId: view.Combat?.State.Monsters.FirstOrDefault()?.InstanceId ?? 0),
+            TargetKind.MonsterFromHand => new ActionTarget(MonsterInstanceId: (view.MyHand ?? [])
+                .FirstOrDefault(c => c.InstanceId != playedInstanceId && catalog.Get(c.CardId).Kind == CardKind.Monster)?.InstanceId ?? 0),
+            _ => new ActionTarget(),
+        };
+
     private static CardAction Equip(int id, string actorId) =>
         new("Anlegen", TargetKind.None, _ => new EquipCard(actorId, id));
 

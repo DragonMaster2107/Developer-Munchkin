@@ -3,6 +3,9 @@
 .area-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--dd-space-3); }
 .area-head h2, .hand-title { margin: 0; font-size: 1.1rem; }
 
+.sell-action { display: flex; align-items: center; flex-wrap: wrap; gap: var(--dd-space-2); }
+.sell-reason { font-size: 0.85rem; color: var(--dd-monster); }
+
 .zones { display: flex; flex-wrap: wrap; gap: var(--dd-space-2); }
 
 .slot {
