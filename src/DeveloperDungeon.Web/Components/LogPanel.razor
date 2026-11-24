@@ -1,0 +1,20 @@
+@using DeveloperDungeon.Engine.Views
+
+<section class="log-panel dd-panel" aria-label="Protokoll">
+    <button type="button" class="log-toggle dd-button" aria-expanded="@_open.ToString().ToLowerInvariant()" @onclick="() => _open = !_open">
+        Protokoll @(_open ? "einklappen" : "ausklappen")
+    </button>
+    <h2 class="log-title">Protokoll</h2>
+    <ol class="log-list @(_open ? "" : "collapsed")">
+        @foreach (var entry in View.RecentLog.OrderByDescending(e => e.Seq))
+        {
+            <li class="log-entry">@entry.Text</li>
+        }
+    </ol>
+</section>
+
+@code {
+    private bool _open = true;
+
+    [Parameter, EditorRequired] public GameView View { get; set; } = default!;
+}

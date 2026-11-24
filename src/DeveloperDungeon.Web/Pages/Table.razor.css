@@ -1,0 +1,62 @@
+.table {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18rem;
+    grid-template-areas:
+        "players players"
+        "band band"
+        "middle log"
+        "hand log";
+    gap: var(--dd-space-3);
+}
+
+.table-players { grid-area: players; }
+.table-band { grid-area: band; display: flex; align-items: center; justify-content: space-between; gap: var(--dd-space-3); }
+.table-middle { grid-area: middle; display: flex; gap: var(--dd-space-4); flex-wrap: wrap; }
+.hand-area { grid-area: hand; display: flex; flex-direction: column; gap: var(--dd-space-2); }
+.table-log { grid-area: log; min-height: 0; }
+
+.combat-area { flex: 1 1 14rem; }
+
+.combat-area h2,
+.hand-area h2 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.hand-cards {
+    display: flex;
+    gap: var(--dd-space-2);
+    overflow-x: auto;
+    padding: var(--dd-space-1);
+}
+
+.hand-card.selected {
+    outline: 4px solid var(--dd-curse);
+    outline-offset: 2px;
+    border-radius: var(--dd-radius);
+}
+
+.victory {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--dd-space-4);
+    background: var(--dd-loot);
+    text-align: center;
+}
+
+@media (max-width: 767px) {
+    .table {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "players"
+            "band"
+            "middle"
+            "hand"
+            "log";
+    }
+}

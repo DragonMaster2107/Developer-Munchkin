@@ -1,0 +1,35 @@
+@using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.State
+@using DeveloperDungeon.Engine.Views
+@using DeveloperDungeon.Web.Logic
+
+<div class="action-bar">
+    @if (GiveAwayCount > 0)
+    {
+        <p class="action-hint">Wähle @GiveAwayCount Karten zum Abgeben</p>
+        <button type="button" class="dd-button" disabled="@(Selected.Count != GiveAwayCount)"
+                @onclick="() => OnCommand.InvokeAsync(new EndTurn(ActorId, Selected.ToList()))">Feierabend</button>
+    }
+    else
+    {
+        @foreach (var action in TurnActions.For(View, ActorId))
+        {
+            <button type="button" class="dd-button" @onclick="() => OnCommand.InvokeAsync(action.Command)">@action.Label</button>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public GameView View { get; set; } = default!;
+    [Parameter, EditorRequired] public string ActorId { get; set; } = "";
+    [Parameter] public IReadOnlyCollection<int> Selected { get; set; } = [];
+    [Parameter] public EventCallback<GameCommand> OnCommand { get; set; }
+
+    /// <summary>Anzahl der abzugebenden Karten (Feierabend mit mehr als 5 Handkarten), sonst 0.</summary>
+    public static int GiveAwayFor(GameView view, string actorId) =>
+        view.WinnerId is null && actorId == view.ActivePlayerId && view.Phase == GamePhase.EndTurn
+            ? Math.Max(0, (view.MyHand?.Count ?? 0) - TurnActions.HandLimit)
+            : 0;
+
+    private int GiveAwayCount => GiveAwayFor(View, ActorId);
+}

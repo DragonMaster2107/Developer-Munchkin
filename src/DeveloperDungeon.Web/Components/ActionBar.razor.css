@@ -1,0 +1,11 @@
+.action-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--dd-space-3);
+    flex-wrap: wrap;
+}
+
+.action-hint {
+    margin: 0;
+    font-weight: 600;
+}

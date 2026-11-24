@@ -1,0 +1,15 @@
+.deck-area {
+    display: flex;
+    gap: var(--dd-space-4);
+    flex-wrap: wrap;
+}
+
+.deck h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.deck-count {
+    margin: 0 0 var(--dd-space-2);
+    color: var(--dd-muted);
+}

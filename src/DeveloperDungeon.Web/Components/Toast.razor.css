@@ -1,0 +1,14 @@
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: var(--dd-space-4);
+    transform: translateX(-50%);
+    z-index: 200;
+    max-width: 90vw;
+    padding: var(--dd-space-2) var(--dd-space-3);
+    background: var(--dd-danger);
+    color: #fff;
+    border: var(--dd-outline);
+    border-radius: var(--dd-radius);
+    box-shadow: var(--dd-shadow);
+}

@@ -1,0 +1,57 @@
+@using DeveloperDungeon.Web.Logic
+@implements IDisposable
+@inject TableController Table
+
+@if (_text is not null)
+{
+    <div class="toast" role="alert">@_text</div>
+}
+
+@code {
+    private static readonly TimeSpan Duration = TimeSpan.FromSeconds(4);
+
+    private string? _text;
+    private string? _lastRejection;
+    private string? _lastWarning;
+    private Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        _lastRejection = Table.HasGame ? Table.LastRejection : null;
+        _lastWarning = Table.HasGame ? Table.LastWarning : null;
+        Table.Changed += OnChanged;
+    }
+
+    private void OnChanged()
+    {
+        var rejection = Table.LastRejection;
+        var warning = Table.LastWarning;
+        var fresh = (rejection is not null && rejection != _lastRejection) || (warning is not null && warning != _lastWarning);
+        _lastRejection = rejection;
+        _lastWarning = warning;
+        if (!fresh)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(() =>
+        {
+            _text = string.Join(" ", new[] { rejection, warning }.Where(t => !string.IsNullOrEmpty(t)));
+            _timer?.Dispose();
+            _timer = new Timer(_ => _ = InvokeAsync(Hide), null, Duration, Timeout.InfiniteTimeSpan);
+            StateHasChanged();
+        });
+    }
+
+    private void Hide()
+    {
+        _text = null;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        Table.Changed -= OnChanged;
+        _timer?.Dispose();
+    }
+}

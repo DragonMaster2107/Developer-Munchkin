@@ -1,0 +1,44 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Engine.Views
+
+<ul class="player-bar" aria-label="Spieler">
+    @foreach (var p in View.Players)
+    {
+        var active = p.Id == View.ActivePlayerId;
+        <li class="player-slot @(active ? "active" : "")" style="--player-color:@p.Color" aria-current="@(active ? "true" : null)">
+            <span class="player-dot" aria-hidden="true">@Initials(p.Name)</span>
+            <div class="player-info">
+                <strong class="player-name">@p.Name</strong>
+                @if (active)
+                {
+                    <span class="player-turn">Am Zug</span>
+                }
+                <div class="player-level">Stufe @p.Level – @p.Title</div>
+                <div class="player-stats">Kampfstärke @p.BasePower · Handkarten @p.HandCount</div>
+                <div class="player-chips">
+                    @foreach (var card in p.Departments.Concat(p.Languages))
+                    {
+                        <span class="player-chip">@Catalog.Get(card.CardId).Name</span>
+                    }
+                </div>
+                @if (CanInterject && !active)
+                {
+                    <button type="button" class="dd-button player-interject" @onclick="() => OnInterject.InvokeAsync(p.Id)">Ich spiel was</button>
+                }
+            </div>
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter, EditorRequired] public GameView View { get; set; } = default!;
+    [Parameter, EditorRequired] public CardCatalog Catalog { get; set; } = default!;
+    [Parameter] public bool CanInterject { get; set; }
+    [Parameter] public EventCallback<string> OnInterject { get; set; }
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return string.Concat(parts.Take(2).Select(w => char.ToUpperInvariant(w[0])));
+    }
+}

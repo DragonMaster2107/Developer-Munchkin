@@ -1,0 +1,121 @@
+@page "/spiel"
+@using DeveloperDungeon.Engine.Commands
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Engine.State
+@using DeveloperDungeon.Web.Components
+@using DeveloperDungeon.Web.Logic
+@implements IDisposable
+@inject TableController Game
+@inject NavigationManager Nav
+
+<PageTitle>Developer Dungeon – Spiel</PageTitle>
+
+@if (Game.HasGame)
+{
+    var view = Game.View;
+    @if (view.WinnerId is { } winnerId)
+    {
+        <div class="victory" role="dialog" aria-modal="true" aria-label="Sieg">
+            <h1>@view.Players.First(p => p.Id == winnerId).Name ist CTO!</h1>
+            <button type="button" class="dd-button" @onclick='() => Nav.NavigateTo("/")'>Zur Startseite</button>
+        </div>
+    }
+    else if (Game.HandoffTargetId is { } targetId)
+    {
+        var target = view.Players.First(p => p.Id == targetId);
+        <HandoffScreen PlayerName="@target.Name" Color="@target.Color" OnReveal="Game.ConfirmHandoff" />
+    }
+    else
+    {
+        var actorId = Game.ActorId;
+        var giveAway = ActionBar.GiveAwayFor(view, actorId);
+        <div class="table">
+            <div class="table-players">
+                <PlayerBar View="view" Catalog="Game.Catalog" CanInterject="@(view.Phase != GamePhase.Setup)" OnInterject="Game.BeginInterjection" />
+            </div>
+
+            @if (view.Phase == GamePhase.Setup && Game.SetupPlayerId is { } setupId)
+            {
+                <div class="table-band dd-panel" role="status">
+                    <span>Aufbau-Runde: @view.Players.First(p => p.Id == setupId).Name legt Abteilung, Sprache und Ausrüstung aus</span>
+                    <button type="button" class="dd-button" @onclick="Game.FinishSetupForCurrentAsync">Fertig</button>
+                </div>
+            }
+            else if (Game.InterjectorId is { } interjectorId)
+            {
+                <div class="table-band dd-panel" role="status">
+                    <span>@view.Players.First(p => p.Id == interjectorId).Name spielt etwas</span>
+                    <button type="button" class="dd-button" @onclick="Game.EndInterjection">Zurück zum Zug</button>
+                </div>
+            }
+
+            <div class="table-middle">
+                <DeckArea View="view" Catalog="Game.Catalog" OnZoom="c => _zoom = c" />
+                <section class="combat-area dd-panel" aria-label="Kampf">
+                    <h2>Kampf</h2>
+                </section>
+            </div>
+
+            <section class="hand-area dd-panel" aria-label="Hand">
+                <h2>Hand</h2>
+                <div class="hand-cards">
+                    @foreach (var card in view.MyHand ?? [])
+                    {
+                        var id = card.InstanceId;
+                        var selected = _selected.Contains(id);
+                        var click = giveAway > 0 ? EventCallback.Factory.Create(this, () => ToggleSelected(id)) : default;
+                        <div class="hand-card @(selected ? "selected" : "")" data-selected="@selected.ToString().ToLowerInvariant()">
+                            <CardView Card="Game.Catalog.Get(card.CardId)" Size="CardSize.Small"
+                                      OnClick="click" />
+                        </div>
+                    }
+                </div>
+                <ActionBar View="view" ActorId="@actorId" Selected="_selected" OnCommand="SendCommand" />
+            </section>
+
+            <aside class="table-log">
+                <LogPanel View="view" />
+            </aside>
+        </div>
+    }
+}
+
+<Toast />
+<CardZoom Card="_zoom" OnClose="() => _zoom = null" />
+
+@code {
+    private readonly HashSet<int> _selected = [];
+    private CardDefinition? _zoom;
+
+    protected override void OnInitialized()
+    {
+        if (!Game.HasGame)
+        {
+            Nav.NavigateTo("/", replace: true);
+            return;
+        }
+
+        Game.Changed += OnChanged;
+    }
+
+    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void ToggleSelected(int id)
+    {
+        if (!_selected.Remove(id))
+        {
+            _selected.Add(id);
+        }
+    }
+
+    private async Task SendCommand(GameCommand command)
+    {
+        var result = await Game.SendAsync(command);
+        if (result.Accepted && command is EndTurn)
+        {
+            _selected.Clear();
+        }
+    }
+
+    public void Dispose() => Game.Changed -= OnChanged;
+}

@@ -1,0 +1,27 @@
+@using DeveloperDungeon.Engine.Cards
+@using DeveloperDungeon.Engine.Views
+
+<section class="deck-area" aria-label="Stapel">
+    <div class="deck">
+        <h3>Ticket-Stapel</h3>
+        <p class="deck-count">@View.TicketDeckCount Karten</p>
+        @if (View.TicketDiscardTop is { } ticket)
+        {
+            <CardView Card="Catalog.Get(ticket.CardId)" Size="CardSize.Small" OnClick="() => OnZoom.InvokeAsync(Catalog.Get(ticket.CardId))" />
+        }
+    </div>
+    <div class="deck">
+        <h3>Loot-Stapel</h3>
+        <p class="deck-count">@View.LootDeckCount Karten</p>
+        @if (View.LootDiscardTop is { } loot)
+        {
+            <CardView Card="Catalog.Get(loot.CardId)" Size="CardSize.Small" OnClick="() => OnZoom.InvokeAsync(Catalog.Get(loot.CardId))" />
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public GameView View { get; set; } = default!;
+    [Parameter, EditorRequired] public CardCatalog Catalog { get; set; } = default!;
+    [Parameter] public EventCallback<CardDefinition> OnZoom { get; set; }
+}

@@ -1,0 +1,10 @@
+<div class="handoff" style="background:@Color" role="dialog" aria-modal="true" aria-label="Gerät übergeben">
+    <h1>Gib das Gerät an @PlayerName</h1>
+    <button type="button" class="dd-button" @onclick="OnReveal">Ich bin @PlayerName – aufdecken</button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string PlayerName { get; set; } = "";
+    [Parameter, EditorRequired] public string Color { get; set; } = "#ffffff";
+    [Parameter] public EventCallback OnReveal { get; set; }
+}

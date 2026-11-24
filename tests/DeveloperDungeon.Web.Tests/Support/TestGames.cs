@@ -126,3 +126,24 @@ public static class TestGames
         throw new InvalidOperationException("Kein Seed mit Kampf gefunden.");
     }
 }
+
+public static class HandSizing
+{
+    /// <summary>Bringt die aufgedeckte Hand des aktiven Spielers per Werkzeugkasten auf die gewünschte Größe.</summary>
+    public static async Task SetHandSizeAsync(TableController c, int size)
+    {
+        var active = c.View.ActivePlayerId;
+        while (c.View.MyHand!.Count > size)
+        {
+            await c.SendAsync(new ManualDiscard(active, c.View.MyHand[0].InstanceId));
+        }
+        for (var id = 1; id < 300 && c.View.MyHand!.Count < size; id++)
+        {
+            await c.SendAsync(new ManualMoveCard(active, id, active, Zone.Hand));
+        }
+        if (c.View.MyHand!.Count != size)
+        {
+            throw new InvalidOperationException($"Hand konnte nicht auf {size} gebracht werden.");
+        }
+    }
+}
