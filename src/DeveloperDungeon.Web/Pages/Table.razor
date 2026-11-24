@@ -32,7 +32,7 @@
     {
         var actorId = Game.ActorId;
         var giveAway = ActionBar.GiveAwayFor(view, actorId);
-        <div class="table">
+        <div class="@(_shake ? "table shake" : "table")">
             <div class="table-players">
                 <PlayerBar View="view" Catalog="Game.Catalog" CanInterject="@(view.Phase != GamePhase.Setup)" OnInterject="Game.BeginInterjection" />
                 <button type="button" class="dd-button toolbox-toggle" aria-label="Werkzeugkasten" aria-expanded="@(_toolbox ? "true" : "false")" @onclick="() => _toolbox = !_toolbox">🔧</button>
@@ -79,6 +79,7 @@
     }
 }
 
+<AnimationLayer Enabled="_animations" OnActiveChanged="k => { _shake = k == CueKind.ScreenShake; StateHasChanged(); }" />
 <Toast />
 <CardZoom Card="_zoom" OnClose="() => _zoom = null" />
 
@@ -86,6 +87,8 @@
     private readonly HashSet<int> _selected = [];
     private CardDefinition? _zoom;
     private bool _toolbox;
+    private bool _shake;
+    private bool _animations = true;
     private string? _selectedFor;
     private int _countdownSeconds = new GameSettings().CountdownSeconds;
     private IReadOnlyList<GameEvent>? _dismissedEvents;
@@ -118,7 +121,9 @@
         }
 
         Game.Changed += OnChanged;
-        _countdownSeconds = (await Settings.LoadAsync()).CountdownSeconds;
+        var settings = await Settings.LoadAsync();
+        _countdownSeconds = settings.CountdownSeconds;
+        _animations = settings.AnimationsEnabled;
     }
 
     private void OnChanged() => _ = InvokeAsync(StateHasChanged);

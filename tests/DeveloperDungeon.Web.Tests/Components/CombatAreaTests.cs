@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using AngleSharp.Dom;
 using Bunit;
 using DeveloperDungeon.Engine.Cards;
@@ -24,6 +25,7 @@ public class CombatAreaTests : BunitContext
         Services.AddSingleton(new SettingsStore(storage));
         Services.AddSingleton(TestGames.Catalog);
         Services.AddSingleton(CardArtCatalog.Parse("{}"));
+        Services.TryAddSingleton<TimeProvider>(TimeProvider.System);
         Services.AddSingleton(controller);
         return Render<Table>();
     }
@@ -141,6 +143,7 @@ public class CombatAreaTests : BunitContext
         var card = TestGames.Catalog.Get("curse-unlocked-pc");
         var closed = false;
         Services.AddSingleton(CardArtCatalog.Parse("{}"));
+        Services.TryAddSingleton<TimeProvider>(TimeProvider.System);
 
         var cut = Render<ManualEffectDialog>(p => p
             .Add(x => x.Card, card)

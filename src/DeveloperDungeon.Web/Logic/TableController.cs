@@ -35,6 +35,8 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage, T
     public string? SetupPlayerId { get; private set; }
 
     public IReadOnlyList<GameEvent> LastEvents { get; private set; } = [];
+    /// <summary>Zählt jeden angenommenen Befehl hoch; wer Ereignisse nur einmal abspielen will, vergleicht damit.</summary>
+    public int EventsVersion { get; private set; }
     public string? LastRejection { get; private set; }
     public string? LastWarning { get; private set; }
 
@@ -220,6 +222,7 @@ public sealed class TableController(CardCatalog catalog, IGameStorage storage, T
         {
             LastRejection = null;
             LastEvents = result.Events;
+            EventsVersion++;
             Refresh();
             if (View.ActivePlayerId != activeBefore)
             {

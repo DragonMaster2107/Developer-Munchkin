@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using AngleSharp.Dom;
 using Bunit;
 using DeveloperDungeon.Engine.Cards;
@@ -18,6 +19,7 @@ public class PlayerAreaTests : BunitContext
         Services.AddSingleton(new SettingsStore(storage));
         Services.AddSingleton(TestGames.Catalog);
         Services.AddSingleton(CardArtCatalog.Parse("{}"));
+        Services.TryAddSingleton<TimeProvider>(TimeProvider.System);
         Services.AddSingleton(controller);
         return Render<Table>();
     }

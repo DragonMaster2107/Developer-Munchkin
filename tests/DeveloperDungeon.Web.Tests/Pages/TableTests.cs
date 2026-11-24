@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
 using AngleSharp.Dom;
 using Bunit;
@@ -19,6 +20,7 @@ public class TableTests : BunitContext
         Services.AddSingleton(new SettingsStore(storage));
         Services.AddSingleton(TestGames.Catalog);
         Services.AddSingleton(CardArtCatalog.Parse("{}"));
+        Services.TryAddSingleton<TimeProvider>(TimeProvider.System);
         Services.AddSingleton(controller);
         return Render<Table>();
     }

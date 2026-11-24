@@ -84,6 +84,20 @@ public class TableControllerTests
     }
 
     [Fact]
+    public async Task EventsVersion_CountsOnlyAcceptedCommands()
+    {
+        var c = await TestGames.StartedAsync();
+        c.ConfirmHandoff();
+        var start = c.EventsVersion;
+
+        await c.SendAsync(new WorkBacklog(c.View.ActivePlayerId));
+        Assert.Equal(start, c.EventsVersion);
+
+        await c.SendAsync(new OpenTicket(c.View.ActivePlayerId));
+        Assert.Equal(start + 1, c.EventsVersion);
+    }
+
+    [Fact]
     public async Task RejectedCommand_DoesNotSave_AndSetsLastRejection()
     {
         var storage = new InMemoryGameStorage();

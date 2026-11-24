@@ -1,0 +1,86 @@
+@using DeveloperDungeon.Web.Logic
+@implements IDisposable
+@inject TableController Table
+@inject TimeProvider Time
+
+<div class="anim-layer" aria-live="polite">
+    @if (_current is { } cue)
+    {
+        <div class="anim-banner anim-@cue.Kind.ToString().ToLowerInvariant()" role="status">@cue.Text</div>
+        @if (cue.Kind is CueKind.LevelUp or CueKind.Victory)
+        {
+            <div class="confetti" aria-hidden="true">
+                @for (var i = 0; i < 24; i++)
+                {
+                    <span class="confetti-piece" style="--i:@i"></span>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private readonly Queue<AnimationCue> _queue = new();
+    private AnimationCue? _current;
+    private ITimer? _timer;
+    private int _seenVersion;
+
+    /// <summary>Bei false werden keine Cues abgespielt.</summary>
+    [Parameter] public bool Enabled { get; set; } = true;
+
+    /// <summary>Meldet die Art der laufenden Cue (null, wenn keine läuft); der Tisch nutzt das fürs Wackeln.</summary>
+    [Parameter] public EventCallback<CueKind?> OnActiveChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _seenVersion = Table.EventsVersion;
+        Table.Changed += OnChanged;
+    }
+
+    private void OnChanged()
+    {
+        if (Table.EventsVersion == _seenVersion)
+        {
+            return;
+        }
+
+        _seenVersion = Table.EventsVersion;
+        if (!Enabled || !Table.HasGame)
+        {
+            return;
+        }
+
+        var cues = AnimationCues.From(Table.LastEvents, Table.View, Table.Catalog);
+        _ = InvokeAsync(() =>
+        {
+            foreach (var cue in cues)
+            {
+                _queue.Enqueue(cue);
+            }
+            if (_current is null)
+            {
+                return Advance();
+            }
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task Advance()
+    {
+        _timer?.Dispose();
+        _timer = null;
+        _current = _queue.TryDequeue(out var next) ? next : null;
+        if (_current is { } cue)
+        {
+            _timer = Time.CreateTimer(_ => _ = InvokeAsync(Advance), null, TimeSpan.FromMilliseconds(cue.DurationMs), Timeout.InfiniteTimeSpan);
+        }
+        StateHasChanged();
+        await OnActiveChanged.InvokeAsync(_current?.Kind);
+    }
+
+    public void Dispose()
+    {
+        Table.Changed -= OnChanged;
+        _timer?.Dispose();
+    }
+}
