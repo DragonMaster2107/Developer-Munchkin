@@ -101,3 +101,35 @@ public class AnimationCuesTests
         Assert.All(cues, x => Assert.InRange(x.DurationMs, 1, 1500));
     }
 }
+
+public class AnimationCuesSelectionTests
+{
+    private static AnimationCue Cue(CueKind k) => new(k, k.ToString(), 100);
+
+    [Fact]
+    public void SelectForPlayback_KeepsAtMostTwo_ByPriority_InOriginalOrder()
+    {
+        var all = new[] { CueKind.CardFly, CueKind.LevelDown, CueKind.MonsterSlam, CueKind.EscapeSuccess, CueKind.LevelUp }.Select(Cue).ToList();
+
+        var picked = AnimationCues.SelectForPlayback(all);
+
+        Assert.Equal([CueKind.MonsterSlam, CueKind.LevelUp], picked.Select(c => c.Kind));
+    }
+
+    [Fact]
+    public void SelectForPlayback_Victory_BeatsEverything()
+    {
+        var all = new[] { CueKind.LevelUp, CueKind.MonsterSlam, CueKind.Victory }.Select(Cue).ToList();
+
+        Assert.Equal([CueKind.LevelUp, CueKind.Victory], AnimationCues.SelectForPlayback(all).Select(c => c.Kind));
+    }
+
+    [Fact]
+    public void SelectForPlayback_ShortLists_AreUnchanged()
+    {
+        var one = new[] { Cue(CueKind.CardFly) };
+
+        Assert.Equal(one, AnimationCues.SelectForPlayback(one));
+        Assert.Empty(AnimationCues.SelectForPlayback([]));
+    }
+}

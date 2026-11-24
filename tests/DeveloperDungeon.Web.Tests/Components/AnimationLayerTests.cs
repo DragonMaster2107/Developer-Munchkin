@@ -26,7 +26,7 @@ public class AnimationLayerTests : BunitContext
             var c = await TestGames.StartedAsync(3, seed, null, time);
             c.ConfirmHandoff();
             var preview = await c.CheckAsync(new OpenTicket(c.View.ActivePlayerId));
-            var cues = AnimationCues.From(preview.Events, c.View, c.Catalog);
+            var cues = AnimationCues.SelectForPlayback(AnimationCues.From(preview.Events, c.View, c.Catalog));
             if (preview.Accepted && cues.Count > 0)
             {
                 return (c, time, cues);
@@ -63,6 +63,35 @@ public class AnimationLayerTests : BunitContext
         }
         time.Advance(TimeSpan.FromMilliseconds(1500));
         cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(".anim-banner")));
+    }
+
+    [Fact]
+    public async Task Disposed_MidCue_AdvancingTimeDoesNothing()
+    {
+        var (c, time, _) = await BeforeOpeningTicketAsync();
+        var cut = RenderLayer(c, time, enabled: true);
+        await c.SendAsync(new OpenTicket(c.View.ActivePlayerId));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".anim-banner")));
+
+        cut.Instance.Dispose();
+        var markup = cut.Markup;
+        time.Advance(TimeSpan.FromSeconds(30));
+
+        Assert.Equal(markup, cut.Markup);
+    }
+
+    [Fact]
+    public async Task DisablingMidCue_StopsPlaybackAndTimer()
+    {
+        var (c, time, _) = await BeforeOpeningTicketAsync();
+        var cut = RenderLayer(c, time, enabled: true);
+        await c.SendAsync(new OpenTicket(c.View.ActivePlayerId));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".anim-banner")));
+
+        cut.Render(p => p.Add(x => x.Enabled, false));
+        time.Advance(TimeSpan.FromSeconds(30));
+
+        Assert.Empty(cut.FindAll(".anim-banner"));
     }
 
     [Fact]

@@ -37,4 +37,20 @@ public static class AnimationCues
         }
         return cues;
     }
+
+    private static readonly CueKind[] Priority =
+        [CueKind.Victory, CueKind.LevelUp, CueKind.MonsterSlam, CueKind.ScreenShake, CueKind.EscapeFail, CueKind.EscapeSuccess, CueKind.LevelDown, CueKind.CardFly];
+
+    public const int MaxPerBatch = 2;
+
+    /// <summary>Wählt höchstens zwei Cues nach Wichtigkeit aus und behält deren ursprüngliche Reihenfolge.</summary>
+    public static IReadOnlyList<AnimationCue> SelectForPlayback(IReadOnlyList<AnimationCue> cues) =>
+        cues.Count <= MaxPerBatch
+            ? cues
+            : [.. cues
+                .Select((cue, index) => (cue, index))
+                .OrderBy(x => Array.IndexOf(Priority, x.cue.Kind)).ThenBy(x => x.index)
+                .Take(MaxPerBatch)
+                .OrderBy(x => x.index)
+                .Select(x => x.cue)];
 }

@@ -24,6 +24,7 @@
     private AnimationCue? _current;
     private ITimer? _timer;
     private int _seenVersion;
+    private bool _disposed;
 
     /// <summary>Bei false werden keine Cues abgespielt.</summary>
     [Parameter] public bool Enabled { get; set; } = true;
@@ -35,6 +36,23 @@
     {
         _seenVersion = Table.EventsVersion;
         Table.Changed += OnChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!Enabled && (_current is not null || _queue.Count > 0))
+        {
+            Stop();
+            _ = OnActiveChanged.InvokeAsync(null);
+        }
+    }
+
+    private void Stop()
+    {
+        _queue.Clear();
+        _current = null;
+        _timer?.Dispose();
+        _timer = null;
     }
 
     private void OnChanged()
@@ -50,26 +68,39 @@
             return;
         }
 
-        var cues = AnimationCues.From(Table.LastEvents, Table.View, Table.Catalog);
+        var cues = AnimationCues.SelectForPlayback(AnimationCues.From(Table.LastEvents, Table.View, Table.Catalog));
+        if (cues.Count == 0)
+        {
+            return;
+        }
+
         _ = InvokeAsync(() =>
         {
+            if (_disposed || !Enabled)
+            {
+                return Task.CompletedTask;
+            }
+
+            // Eine neue Ereignisgruppe ersetzt, was läuft oder wartet.
+            _queue.Clear();
             foreach (var cue in cues)
             {
                 _queue.Enqueue(cue);
             }
-            if (_current is null)
-            {
-                return Advance();
-            }
-            return Task.CompletedTask;
+            return Advance();
         });
     }
 
     private async Task Advance()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         _timer?.Dispose();
         _timer = null;
-        _current = _queue.TryDequeue(out var next) ? next : null;
+        _current = Enabled && _queue.TryDequeue(out var next) ? next : null;
         if (_current is { } cue)
         {
             _timer = Time.CreateTimer(_ => _ = InvokeAsync(Advance), null, TimeSpan.FromMilliseconds(cue.DurationMs), Timeout.InfiniteTimeSpan);
@@ -80,7 +111,8 @@
 
     public void Dispose()
     {
+        _disposed = true;
         Table.Changed -= OnChanged;
-        _timer?.Dispose();
+        Stop();
     }
 }
